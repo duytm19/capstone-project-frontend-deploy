@@ -46,7 +46,7 @@ export default function SubscriptionPlansManagement() {
 
   const filteredPlans = plans.filter(plan =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    plan.description.toLowerCase().includes(searchTerm.toLowerCase())
+    (plan.description && plan.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const formatCurrency = (value: number) => {
@@ -210,9 +210,7 @@ export default function SubscriptionPlansManagement() {
                 <TableRow>
                   <TableHead>Tên gói</TableHead>
                   <TableHead>Giá</TableHead>
-                  <TableHead>Thời hạn</TableHead>
-                  <TableHead>Giảm giá</TableHead>
-                  <TableHead>Người đăng ký</TableHead>
+                  <TableHead>Số khóa học tối đa</TableHead>
                   <TableHead>Trạng thái</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
                 </TableRow>
@@ -224,7 +222,7 @@ export default function SubscriptionPlansManagement() {
                       <div>
                         <div className="font-medium">{plan.name}</div>
                         <div className="text-sm text-muted-foreground line-clamp-1">
-                          {plan.description}
+                          {plan.description || 'Không có mô tả'}
                         </div>
                       </div>
                     </TableCell>
@@ -232,10 +230,10 @@ export default function SubscriptionPlansManagement() {
                       <div className="font-medium">{formatCurrency(plan.monthlyFee)}</div>
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">Tối đa {plan.maxCourses} khóa học</div>
+                      <div className="text-sm">{plan.maxCourses} khóa học</div>
                     </TableCell>
                     <TableCell>
-                      <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
+                      {getStatusBadge()}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">0 người dùng</div>

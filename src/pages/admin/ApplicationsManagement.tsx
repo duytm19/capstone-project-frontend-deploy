@@ -235,11 +235,6 @@ export default function ApplicationsManagement() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {application.expertise.join(', ') || 'Chưa có'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
                         {application.certification.join(', ') || 'Chưa có'}
                       </div>
                     </TableCell>

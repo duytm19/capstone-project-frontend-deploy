@@ -54,8 +54,6 @@ export default function TransactionsManagement() {
 
   const filteredTransactions = transactions.filter(transaction => {
     const matchesSearch = 
-      // transaction.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      // transaction.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
@@ -98,18 +96,32 @@ export default function TransactionsManagement() {
 
   const getTypeBadge = (type: string) => {
     switch (type) {
-      case 'COURSE_PURCHASE':
+      case 'PAYMENT':
         return (
           <div className="flex items-center space-x-1">
             <CreditCard className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">Mua khóa học</span>
+            <span className="text-sm">Thanh toán</span>
           </div>
         );
-      case 'WALLET_TOPUP':
+      case 'DEPOSIT':
         return (
           <div className="flex items-center space-x-1">
             <Wallet className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Nạp ví</span>
+            <span className="text-sm">Nạp tiền</span>
+          </div>
+        );
+      case 'MONTHLYFEE':
+        return (
+          <div className="flex items-center space-x-1">
+            <CreditCard className="h-4 w-4 text-orange-600" />
+            <span className="text-sm">Phí hàng tháng</span>
+          </div>
+        );
+      case 'WITHDRAW':
+        return (
+          <div className="flex items-center space-x-1">
+            <Wallet className="h-4 w-4 text-red-600" />
+            <span className="text-sm">Rút tiền</span>
           </div>
         );
       default:
@@ -216,8 +228,10 @@ export default function TransactionsManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="COURSE_PURCHASE">Mua khóa học</SelectItem>
-                <SelectItem value="WALLET_TOPUP">Nạp ví</SelectItem>
+                <SelectItem value="PAYMENT">Thanh toán</SelectItem>
+                <SelectItem value="DEPOSIT">Nạp tiền</SelectItem>
+                <SelectItem value="MONTHLYFEE">Phí hàng tháng</SelectItem>
+                <SelectItem value="WITHDRAW">Rút tiền</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline">
@@ -231,7 +245,6 @@ export default function TransactionsManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Mã giao dịch</TableHead>
-                  <TableHead>Người dùng</TableHead>
                   <TableHead>Loại</TableHead>
                   <TableHead>Số tiền</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -245,12 +258,6 @@ export default function TransactionsManagement() {
                     <TableCell>
                       <div className="font-mono text-sm">{transaction.id}</div>
                     </TableCell>
-                    {/* <TableCell>
-                      <div>
-                        <div className="font-medium">{transaction.user.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{transaction.user.email}</div>
-                      </div>
-                    </TableCell> */}
                     <TableCell>
                       {getTypeBadge(transaction.transactionType)}
                     </TableCell>
@@ -310,14 +317,6 @@ export default function TransactionsManagement() {
                                     <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
                                   </div>
                                 </div>
-                                {/* <div>
-                                  <label className="text-sm font-medium">Thông tin người dùng</label>
-                                  <div className="mt-1 p-3 bg-muted rounded-lg">
-                                    <p className="font-medium">{transaction.user.fullName}</p>
-                                    <p className="text-sm text-muted-foreground">{transaction.user.email}</p>
-                                    <p className="text-sm text-muted-foreground">ID: {transaction.user.id}</p>
-                                  </div>
-                                </div> */}
                                 {transaction.description && (
                                   <div>
                                     <label className="text-sm font-medium">Mô tả</label>

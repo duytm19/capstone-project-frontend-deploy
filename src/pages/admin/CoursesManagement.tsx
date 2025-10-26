@@ -155,10 +155,11 @@ export default function CoursesManagement() {
                       {formatCurrency(course.price)}
                     </TableCell>
                     <TableCell>
-                      {course.ratingCount ? (
+                      {course.averageRating ? (
                         <div className="flex items-center space-x-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{course.ratingCount}</span>
+                          <span className="text-sm font-medium">{course.averageRating.toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground">({course.ratingCount || 0})</span>
                         </div>
                       ) : (
                         <span className="text-muted-foreground">Chưa có</span>

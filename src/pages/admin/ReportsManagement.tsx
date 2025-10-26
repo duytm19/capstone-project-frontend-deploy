@@ -131,13 +131,7 @@ export default function ReportsManagement() {
     }
   };
 
-  const handleStatusChange = (reportId: string, newStatus: string) => {
-    setReports(reports.map(report => 
-      report.id === reportId 
-        ? { ...report, status: newStatus as 'PENDING' | 'RESOLVED' | 'DISMISSED' }
-        : report
-    ));
-  };
+
 
   return (
     <div className="space-y-6">
@@ -166,17 +160,7 @@ export default function ReportsManagement() {
                 className="pl-8"
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                <SelectItem value="PENDING">Đang xử lý</SelectItem>
-                <SelectItem value="RESOLVED">Đã giải quyết</SelectItem>
-                <SelectItem value="DISMISSED">Từ chối</SelectItem>
-              </SelectContent>
-            </Select>
+
             <Select value={reasonFilter} onValueChange={setReasonFilter}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Lý do báo cáo" />
@@ -200,7 +184,6 @@ export default function ReportsManagement() {
                   <TableHead>Khóa học</TableHead>
                   <TableHead>Lý do</TableHead>
                   <TableHead>Mô tả</TableHead>
-                  <TableHead>Trạng thái</TableHead>
                   <TableHead>Ngày tạo</TableHead>
                   <TableHead className="text-right">Thao tác</TableHead>
                 </TableRow>
@@ -248,17 +231,11 @@ export default function ReportsManagement() {
                             Xem chi tiết
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(report.id, 'RESOLVED')}
-                            className="text-green-600"
-                          >
+                          <DropdownMenuItem className="text-green-600">
                             <Check className="mr-2 h-4 w-4" />
                             Đánh dấu đã giải quyết
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleStatusChange(report.id, 'DISMISSED')}
-                            className="text-red-600"
-                          >
+                          <DropdownMenuItem className="text-red-600">
                             <X className="mr-2 h-4 w-4" />
                             Từ chối báo cáo
                           </DropdownMenuItem>
