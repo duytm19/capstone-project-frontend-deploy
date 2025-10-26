@@ -1,16 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,40 +15,31 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { 
-  Search, 
   MoreHorizontal, 
   Eye, 
-  Filter,
   Download,
   CreditCard,
   Wallet
 } from 'lucide-react';
 import { mockTransactions } from '@/data/admin-mock';
 import { Transaction } from '@/types/admin';
+import DataTable from '@/components/admin/DataTable';
+import FilterSection from '@/components/admin/FilterSection';
 
 export default function TransactionsManagement() {
   const [transactions] = useState<Transaction[]>(mockTransactions);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = 
+    const matchesSearch = transaction.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.id.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesStatus = statusFilter === 'all' || transaction.status === statusFilter;
     const matchesType = typeFilter === 'all' || transaction.transactionType === typeFilter;
-    
     return matchesSearch && matchesStatus && matchesType;
   });
 
@@ -69,273 +50,276 @@ export default function TransactionsManagement() {
     }).format(value);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'SUCCESS':
-        return <Badge className="bg-green-100 text-green-800">Thành công</Badge>;
+        return <Badge variant="default">Thành công</Badge>;
       case 'PENDING':
-        return <Badge className="bg-yellow-100 text-yellow-800">Đang xử lý</Badge>;
+        return <Badge variant="secondary">Đang xử lý</Badge>;
       case 'FAILED':
-        return <Badge className="bg-red-100 text-red-800">Thất bại</Badge>;
-      case 'CANCELLED':
-        return <Badge variant="secondary">Đã hủy</Badge>;
+        return <Badge variant="destructive">Thất bại</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const getTypeBadge = (type: string) => {
+    const typeMap = {
+      'DEPOSIT': { label: 'Nạp tiền', variant: 'default' as const },
+      'PAYMENT': { label: 'Thanh toán', variant: 'secondary' as const },
+      'MONTHLYFEE': { label: 'Phí hàng tháng', variant: 'outline' as const },
+      'WITHDRAW': { label: 'Rút tiền', variant: 'destructive' as const }
+    };
+    
+    const typeInfo = typeMap[type as keyof typeof typeMap] || { label: type, variant: 'outline' as const };
+    return <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>;
+  };
+
+  const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'PAYMENT':
-        return (
-          <div className="flex items-center space-x-1">
-            <CreditCard className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">Thanh toán</span>
-          </div>
-        );
       case 'DEPOSIT':
-        return (
-          <div className="flex items-center space-x-1">
-            <Wallet className="h-4 w-4 text-green-600" />
-            <span className="text-sm">Nạp tiền</span>
-          </div>
-        );
+        return <Wallet className="h-4 w-4 text-green-600" />;
+      case 'PAYMENT':
+        return <CreditCard className="h-4 w-4 text-blue-600" />;
       case 'MONTHLYFEE':
-        return (
-          <div className="flex items-center space-x-1">
-            <CreditCard className="h-4 w-4 text-orange-600" />
-            <span className="text-sm">Phí hàng tháng</span>
-          </div>
-        );
+        return <CreditCard className="h-4 w-4 text-orange-600" />;
       case 'WITHDRAW':
-        return (
-          <div className="flex items-center space-x-1">
-            <Wallet className="h-4 w-4 text-red-600" />
-            <span className="text-sm">Rút tiền</span>
-          </div>
-        );
+        return <Wallet className="h-4 w-4 text-red-600" />;
       default:
-        return <span className="text-sm">{type}</span>;
+        return <CreditCard className="h-4 w-4" />;
     }
   };
 
-  const getTotalStats = () => {
-    const total = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const successful = transactions.filter(t => t.status === 'SUCCESS').length;
-    const pending = transactions.filter(t => t.status === 'PENDING').length;
-    const failed = transactions.filter(t => t.status === 'FAILED').length;
+  const columns = [
+    {
+      key: 'transaction',
+      header: 'Giao dịch',
+      render: (transaction: Transaction) => (
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            {getTypeIcon(transaction.transactionType)}
+          </div>
+          <div>
+            <div className="font-medium">{transaction.description || 'Không có mô tả'}</div>
+            <div className="text-sm text-muted-foreground">ID: {transaction.id}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'wallet',
+      header: 'Ví',
+      render: (transaction: Transaction) => (
+        <div>
+          <div className="font-medium">ID: {transaction.walletId}</div>
+          <div className="text-sm text-muted-foreground">
+            Số dư: {transaction.wallet ? formatCurrency(transaction.wallet.allowance) : 'N/A'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'amount',
+      header: 'Số tiền',
+      render: (transaction: Transaction) => (
+        <div className="text-right">
+          <div className="font-medium">{formatCurrency(transaction.amount)}</div>
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Loại',
+      render: (transaction: Transaction) => getTypeBadge(transaction.transactionType)
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (transaction: Transaction) => getStatusBadge(transaction.status)
+    },
+    {
+      key: 'createdAt',
+      header: 'Ngày tạo',
+      render: (transaction: Transaction) => new Date(transaction.createdAt).toLocaleDateString('vi-VN')
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (transaction: Transaction) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Mở menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedTransaction(transaction)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Download className="mr-2 h-4 w-4" />
+              Xuất báo cáo
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    }
+  ];
 
-    return { total, successful, pending, failed };
-  };
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả trạng thái' },
+    { value: 'SUCCESS', label: 'Thành công' },
+    { value: 'PENDING', label: 'Đang xử lý' },
+    { value: 'FAILED', label: 'Thất bại' }
+  ];
 
-  const stats = getTotalStats();
+  const typeOptions = [
+    { value: 'all', label: 'Tất cả loại' },
+    { value: 'DEPOSIT', label: 'Nạp tiền' },
+    { value: 'PAYMENT', label: 'Thanh toán' },
+    { value: 'MONTHLYFEE', label: 'Phí hàng tháng' },
+    { value: 'WITHDRAW', label: 'Rút tiền' }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý giao dịch</h1>
-          <p className="text-muted-foreground">
-            Theo dõi và quản lý tất cả giao dịch trong hệ thống
-          </p>
-        </div>
-        <Button>
-          <Download className="mr-2 h-4 w-4" />
-          Xuất báo cáo
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý giao dịch</h1>
+        <p className="text-muted-foreground">
+          Theo dõi và quản lý tất cả giao dịch trong hệ thống
+        </p>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.total)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Thành công</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.successful}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang xử lý</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Thất bại</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
-          </CardContent>
-        </Card>
-      </div>
+      <FilterSection
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Tìm kiếm theo mô tả, tên người dùng hoặc email..."
+        filters={[
+          {
+            value: statusFilter,
+            onChange: setStatusFilter,
+            options: statusOptions,
+            placeholder: "Lọc theo trạng thái"
+          },
+          {
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: typeOptions,
+            placeholder: "Lọc theo loại"
+          }
+        ]}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách giao dịch</CardTitle>
-          <CardDescription>
-            Tổng cộng {transactions.length} giao dịch
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm theo tên, email hoặc mã giao dịch..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+      <DataTable
+        title="Danh sách giao dịch"
+        description={`Tổng cộng ${transactions.length} giao dịch`}
+        data={filteredTransactions}
+        columns={columns}
+        emptyMessage="Không tìm thấy giao dịch nào"
+      />
+
+      {/* Transaction Detail Dialog */}
+      <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết giao dịch</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết về giao dịch
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTransaction && (
+            <div className="space-y-6">
+              {/* Transaction Information */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 flex items-center">
+                  {getTypeIcon(selectedTransaction.transactionType)}
+                  <span className="ml-2">Thông tin giao dịch</span>
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">ID giao dịch</label>
+                    <p className="text-sm text-muted-foreground font-mono">{selectedTransaction.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Số tiền</label>
+                    <p className="text-lg font-semibold">{formatCurrency(selectedTransaction.amount)}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Loại giao dịch</label>
+                    <div className="mt-1">{getTypeBadge(selectedTransaction.transactionType)}</div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Trạng thái</label>
+                    <div className="mt-1">{getStatusBadge(selectedTransaction.status)}</div>
+                  </div>
+                </div>
+                
+                {selectedTransaction.description && (
+                  <div className="mt-4">
+                    <label className="text-sm font-medium">Mô tả</label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {selectedTransaction.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* User Information */}
+               <div>
+                 <h3 className="text-lg font-semibold mb-3">Thông tin ví</h3>
+                 <div className="grid grid-cols-2 gap-4">
+                   <div>
+                     <label className="text-sm font-medium">ID ví</label>
+                     <p className="text-sm text-muted-foreground font-mono">{selectedTransaction.walletId}</p>
+                   </div>
+                   <div>
+                     <label className="text-sm font-medium">Số dư ví hiện tại</label>
+                     <p className="text-sm text-muted-foreground">{formatCurrency(selectedTransaction.wallet.allowance)}</p>
+                   </div>
+                 </div>
+               </div>
+
+              {/* Related Information */}
+              {(selectedTransaction.topupOrderId || selectedTransaction.subscriptionContractId) && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Thông tin liên quan</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedTransaction.topupOrderId && (
+                      <div>
+                        <label className="text-sm font-medium">ID đơn nạp tiền</label>
+                        <p className="text-sm text-muted-foreground font-mono">{selectedTransaction.topupOrderId}</p>
+                      </div>
+                    )}
+                    {selectedTransaction.subscriptionContractId && (
+                      <div>
+                        <label className="text-sm font-medium">ID hợp đồng đăng ký</label>
+                        <p className="text-sm text-muted-foreground font-mono">{selectedTransaction.subscriptionContractId}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Timestamps */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Thời gian</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="text-sm font-medium">Ngày tạo</label>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedTransaction.createdAt).toLocaleString('vi-VN')}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Trạng thái" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="SUCCESS">Thành công</SelectItem>
-                <SelectItem value="PENDING">Đang xử lý</SelectItem>
-                <SelectItem value="FAILED">Thất bại</SelectItem>
-                <SelectItem value="CANCELLED">Đã hủy</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[150px]">
-                <SelectValue placeholder="Loại giao dịch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                <SelectItem value="PAYMENT">Thanh toán</SelectItem>
-                <SelectItem value="DEPOSIT">Nạp tiền</SelectItem>
-                <SelectItem value="MONTHLYFEE">Phí hàng tháng</SelectItem>
-                <SelectItem value="WITHDRAW">Rút tiền</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Lọc
-            </Button>
-          </div>
-
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mã giao dịch</TableHead>
-                  <TableHead>Loại</TableHead>
-                  <TableHead>Số tiền</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead>Thời gian</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      <div className="font-mono text-sm">{transaction.id}</div>
-                    </TableCell>
-                    <TableCell>
-                      {getTypeBadge(transaction.transactionType)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{formatCurrency(transaction.amount)}</div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(transaction.status)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{formatDate(transaction.createdAt)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Xem chi tiết
-                              </DropdownMenuItem>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Chi tiết giao dịch</DialogTitle>
-                                <DialogDescription>
-                                  Thông tin chi tiết của giao dịch #{transaction.id}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-6 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Mã giao dịch</label>
-                                    <p className="text-sm text-muted-foreground font-mono">{transaction.id}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Loại giao dịch</label>
-                                    <div className="mt-1">{getTypeBadge(transaction.transactionType)}</div>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Số tiền</label>
-                                    <p className="text-sm text-muted-foreground font-medium">{formatCurrency(transaction.amount)}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Trạng thái</label>
-                                    <div className="mt-1">{getStatusBadge(transaction.status)}</div>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Thời gian tạo</label>
-                                    <p className="text-sm text-muted-foreground">{formatDate(transaction.createdAt)}</p>
-                                  </div>
-                                </div>
-                                {transaction.description && (
-                                  <div>
-                                    <label className="text-sm font-medium">Mô tả</label>
-                                    <p className="text-sm text-muted-foreground mt-1">{transaction.description}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

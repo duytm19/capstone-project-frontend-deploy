@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, DollarSign, CreditCard, Calendar } from 'lucide-react';
 import { mockTransactions, mockUsers } from '@/data/admin-mock';
 import { Transaction } from '@/types/admin';
+import StatCard from '@/components/admin/StatCard';
+import ChartCard from '@/components/admin/ChartCard';
+import FilterSection from '@/components/admin/FilterSection';
+import DataTable from '@/components/admin/DataTable';
 
 export default function RevenueManagement() {
   const [startDate, setStartDate] = useState('');
@@ -62,9 +62,7 @@ export default function RevenueManagement() {
           break;
       }
       
-      if (period !== 'all') {
-        filtered = filtered.filter(t => new Date(t.createdAt) >= filterDate);
-      }
+      filtered = filtered.filter(t => new Date(t.createdAt) >= filterDate);
     }
 
     return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -72,50 +70,100 @@ export default function RevenueManagement() {
 
   // Tính toán thống kê
   const stats = useMemo(() => {
-    const totalRevenue = filteredTransactions.reduce((sum, t) => {
-      // Chỉ tính PAYMENT và MONTHLYFEE là revenue, DEPOSIT và WITHDRAW không phải
-      if (t.transactionType === 'PAYMENT' || t.transactionType === 'MONTHLYFEE') {
-        return sum + t.amount;
-      }
-      return sum;
-    }, 0);
-
+    const totalRevenue = filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
     const totalTransactions = filteredTransactions.length;
     const averageTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
-
+    
+    // Tính toán tăng trưởng so với kỳ trước
+    const now = new Date();
+    const previousPeriodStart = new Date();
+    const currentPeriodStart = new Date();
+    
+    switch (period) {
+      case 'today':
+        previousPeriodStart.setDate(now.getDate() - 1);
+        currentPeriodStart.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        previousPeriodStart.setDate(now.getDate() - 14);
+        currentPeriodStart.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        previousPeriodStart.setMonth(now.getMonth() - 2);
+        currentPeriodStart.setMonth(now.getMonth() - 1);
+        break;
+      case 'quarter':
+        previousPeriodStart.setMonth(now.getMonth() - 6);
+        currentPeriodStart.setMonth(now.getMonth() - 3);
+        break;
+      case 'year':
+        previousPeriodStart.setFullYear(now.getFullYear() - 2);
+        currentPeriodStart.setFullYear(now.getFullYear() - 1);
+        break;
+      default:
+        // For 'all', compare with previous month
+        previousPeriodStart.setMonth(now.getMonth() - 2);
+        currentPeriodStart.setMonth(now.getMonth() - 1);
+    }
+    
+    const previousRevenue = mockTransactions
+      .filter(t => t.status === 'SUCCESS')
+      .filter(t => {
+        const date = new Date(t.createdAt);
+        return date >= previousPeriodStart && date < currentPeriodStart;
+      })
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const revenueGrowth = previousRevenue > 0 ? ((totalRevenue - previousRevenue) / previousRevenue) * 100 : 0;
+    
     return {
       totalRevenue,
       totalTransactions,
-      averageTransaction
+      averageTransaction,
+      revenueGrowth
     };
-  }, [filteredTransactions]);
+  }, [filteredTransactions, period]);
 
   // Tạo dữ liệu cho biểu đồ
   const chartData = useMemo(() => {
-    const dailyRevenue = new Map();
+    const dataMap = new Map();
     
     filteredTransactions.forEach(transaction => {
-      if (transaction.transactionType === 'PAYMENT' || transaction.transactionType === 'MONTHLYFEE') {
-        const date = new Date(transaction.createdAt).toISOString().split('T')[0];
-        const current = dailyRevenue.get(date) || 0;
-        dailyRevenue.set(date, current + transaction.amount);
+      const date = new Date(transaction.createdAt);
+      let key: string;
+      
+      switch (period) {
+        case 'today':
+          key = date.getHours().toString().padStart(2, '0') + ':00';
+          break;
+        case 'week':
+          key = date.toLocaleDateString('vi-VN', { weekday: 'short' });
+          break;
+        case 'month':
+          key = date.getDate().toString();
+          break;
+        case 'quarter':
+        case 'year':
+          key = date.toLocaleDateString('vi-VN', { month: 'short' });
+          break;
+        default:
+          key = date.toLocaleDateString('vi-VN', { month: 'short', year: 'numeric' });
       }
+      
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { name: key, revenue: 0, transactions: 0 });
+      }
+      
+      const existing = dataMap.get(key);
+      existing.revenue += transaction.amount;
+      existing.transactions += 1;
     });
-
-    return Array.from(dailyRevenue.entries())
-      .map(([date, revenue]) => ({ date, revenue }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30); // Lấy 30 ngày gần nhất
-  }, [filteredTransactions]);
-
-  // Phân trang
-  const paginatedTransactions = useMemo(() => {
-    const limitNum = parseInt(limit);
-    const startIndex = (page - 1) * limitNum;
-    return filteredTransactions.slice(startIndex, startIndex + limitNum);
-  }, [filteredTransactions, page, limit]);
-
-  const totalPages = Math.ceil(filteredTransactions.length / parseInt(limit));
+    
+    return Array.from(dataMap.values()).sort((a, b) => {
+      // Simple sorting - in real app, you'd want more sophisticated date sorting
+      return a.name.localeCompare(b.name);
+    });
+  }, [filteredTransactions, period]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -124,278 +172,249 @@ export default function RevenueManagement() {
     }).format(value);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getTransactionTypeBadge = (type: string) => {
-    const variants = {
-      PAYMENT: 'default',
-      DEPOSIT: 'secondary',
-      MONTHLYFEE: 'outline',
-      WITHDRAW: 'destructive'
-    } as const;
-
-    const labels = {
-      PAYMENT: 'Thanh toán',
-      DEPOSIT: 'Nạp tiền',
-      MONTHLYFEE: 'Phí hàng tháng',
-      WITHDRAW: 'Rút tiền'
+  const getTypeBadge = (type: string) => {
+    const typeMap = {
+      'DEPOSIT': { label: 'Nạp tiền', variant: 'default' as const },
+      'PAYMENT': { label: 'Thanh toán', variant: 'secondary' as const },
+      'MONTHLYFEE': { label: 'Phí hàng tháng', variant: 'outline' as const },
+      'WITHDRAW': { label: 'Rút tiền', variant: 'destructive' as const }
     };
-
-    return (
-      <Badge variant={variants[type as keyof typeof variants] || 'default'}>
-        {labels[type as keyof typeof labels] || type}
-      </Badge>
-    );
+    
+    const typeInfo = typeMap[type as keyof typeof typeMap] || { label: type, variant: 'outline' as const };
+    return <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>;
   };
+
+  // Phân trang
+  const itemsPerPage = parseInt(limit);
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+
+  const columns = [
+    {
+      key: 'id',
+      header: 'Mã giao dịch',
+      render: (transaction: Transaction) => (
+        <div className="font-mono text-sm">{transaction.id}</div>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Loại',
+      render: (transaction: Transaction) => getTypeBadge(transaction.transactionType)
+    },
+    {
+      key: 'amount',
+      header: 'Số tiền',
+      render: (transaction: Transaction) => (
+        <div className="font-medium text-right">{formatCurrency(transaction.amount)}</div>
+      )
+    },
+    {
+      key: 'wallet',
+      header: 'Ví',
+      render: (transaction: Transaction) => (
+        <div className="font-mono text-sm">{transaction.walletId}</div>
+      )
+    },
+    {
+      key: 'createdAt',
+      header: 'Thời gian',
+      render: (transaction: Transaction) => (
+        <div className="text-sm">
+          {new Date(transaction.createdAt).toLocaleString('vi-VN')}
+        </div>
+      )
+    }
+  ];
+
+  const periodOptions = [
+    { value: 'all', label: 'Tất cả thời gian' },
+    { value: 'today', label: 'Hôm nay' },
+    { value: 'week', label: '7 ngày qua' },
+    { value: 'month', label: '30 ngày qua' },
+    { value: 'quarter', label: '3 tháng qua' },
+    { value: 'year', label: '1 năm qua' }
+  ];
+
+  const typeOptions = [
+    { value: 'all', label: 'Tất cả loại' },
+    { value: 'DEPOSIT', label: 'Nạp tiền' },
+    { value: 'PAYMENT', label: 'Thanh toán' },
+    { value: 'MONTHLYFEE', label: 'Phí hàng tháng' },
+    { value: 'WITHDRAW', label: 'Rút tiền' }
+  ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Quản lý Doanh thu</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý doanh thu</h1>
         <p className="text-muted-foreground">
           Theo dõi và phân tích doanh thu từ các giao dịch
         </p>
       </div>
 
-      {/* Thống kê tổng quan */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng doanh thu</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(stats.totalRevenue)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng giao dịch</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTransactions}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Giao dịch trung bình</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {formatCurrency(stats.averageTransaction)}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Tổng doanh thu"
+          value={formatCurrency(stats.totalRevenue)}
+          description={`${stats.totalTransactions} giao dịch`}
+          icon={DollarSign}
+          trend={{
+            value: stats.revenueGrowth,
+            label: `${stats.revenueGrowth.toFixed(1)}%`,
+            isPositive: stats.revenueGrowth >= 0
+          }}
+        />
+        <StatCard
+          title="Số giao dịch"
+          value={stats.totalTransactions.toString()}
+          description="Giao dịch thành công"
+          icon={CreditCard}
+        />
+        <StatCard
+          title="Trung bình/giao dịch"
+          value={formatCurrency(stats.averageTransaction)}
+          description="Giá trị trung bình"
+          icon={TrendingUp}
+        />
+        <StatCard
+          title="Tăng trưởng"
+          value={`${stats.revenueGrowth.toFixed(1)}%`}
+          description="So với kỳ trước"
+          icon={Calendar}
+          trend={{
+            value: stats.revenueGrowth,
+            label: `${stats.revenueGrowth.toFixed(1)}%`,
+            isPositive: stats.revenueGrowth >= 0
+          }}
+        />
       </div>
 
-      {/* Biểu đồ doanh thu */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Biểu đồ doanh thu theo ngày</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
-              <Tooltip 
-                formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
-                labelFormatter={(label) => `Ngày: ${label}`}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="revenue" 
-                stroke="#8884d8" 
-                strokeWidth={2}
-                dot={{ fill: '#8884d8' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {/* Revenue Chart */}
+      <ChartCard
+        title="Biểu đồ doanh thu"
+        description="Doanh thu theo thời gian"
+      >
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis tickFormatter={(value) => formatCurrency(value)} />
+            <Tooltip 
+              formatter={(value: number) => [formatCurrency(value), 'Doanh thu']}
+              labelFormatter={(label) => `Thời gian: ${label}`}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="revenue" 
+              stroke="#8884d8" 
+              strokeWidth={2}
+              dot={{ fill: '#8884d8' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartCard>
 
-      {/* Bộ lọc */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Bộ lọc</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Ngày bắt đầu</label>
-              <Input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Ngày kết thúc</label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Khoảng thời gian</label>
-              <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="today">Hôm nay</SelectItem>
-                  <SelectItem value="week">7 ngày qua</SelectItem>
-                  <SelectItem value="month">30 ngày qua</SelectItem>
-                  <SelectItem value="quarter">3 tháng qua</SelectItem>
-                  <SelectItem value="year">1 năm qua</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Loại giao dịch</label>
-              <Select value={transactionType} onValueChange={setTransactionType}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  <SelectItem value="PAYMENT">Thanh toán</SelectItem>
-                  <SelectItem value="DEPOSIT">Nạp tiền</SelectItem>
-                  <SelectItem value="MONTHLYFEE">Phí hàng tháng</SelectItem>
-                  <SelectItem value="WITHDRAW">Rút tiền</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Số lượng/trang</label>
-              <Select value={limit} onValueChange={setLimit}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                  <SelectItem value="100">100</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <Button 
-                onClick={() => {
-                  setStartDate('');
-                  setEndDate('');
-                  setPeriod('all');
-                  setTransactionType('all');
-                  setPage(1);
-                }}
-                variant="outline"
-                className="w-full"
+      {/* Filters */}
+      <div className="space-y-4">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-1 gap-4">
+            <div className="flex gap-2">
+              <select
+                value={period}
+                onChange={(e) => setPeriod(e.target.value)}
+                className="px-3 py-2 border border-input rounded-md text-sm"
+                title="Chọn khoảng thời gian"
               >
-                Đặt lại
-              </Button>
+                {periodOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={transactionType}
+                onChange={(e) => setTransactionType(e.target.value)}
+                className="px-3 py-2 border border-input rounded-md text-sm"
+                title="Lọc theo loại giao dịch"
+              >
+                {typeOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex space-x-2">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="px-3 py-2 border border-input rounded-md text-sm"
+              placeholder="Từ ngày"
+            />
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="px-3 py-2 border border-input rounded-md text-sm"
+              placeholder="Đến ngày"
+            />
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStartDate('');
+                setEndDate('');
+                setPeriod('all');
+                setTransactionType('all');
+              }}
+            >
+              Xóa bộ lọc
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      {/* Bảng giao dịch */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Chi tiết giao dịch</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Hiển thị {paginatedTransactions.length} trong tổng số {filteredTransactions.length} giao dịch
-          </p>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Mã giao dịch</TableHead>
-                <TableHead>Người dùng</TableHead>
-                <TableHead>Loại</TableHead>
-                <TableHead>Số tiền</TableHead>
-                <TableHead>Mô tả</TableHead>
-                <TableHead>Thời gian</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedTransactions.map((transaction) => {
-                const user = getUserFromWalletId(transaction.walletId);
-                return (
-                  <TableRow key={transaction.id}>
-                    <TableCell className="font-mono text-sm">
-                      {transaction.id}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{user?.fullName || 'Unknown User'}</div>
-                        <div className="text-sm text-muted-foreground">{user?.email || transaction.walletId}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getTransactionTypeBadge(transaction.transactionType)}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={transaction.description}>
-                        {transaction.description || 'Không có mô tả'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(transaction.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+      {/* Transactions Table */}
+      <DataTable
+        title="Chi tiết giao dịch"
+        description={`Hiển thị ${paginatedTransactions.length} trong tổng số ${filteredTransactions.length} giao dịch`}
+        data={paginatedTransactions}
+        columns={columns}
+        emptyMessage="Không có giao dịch nào trong khoảng thời gian này"
+      />
 
-          {/* Phân trang */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Trang {page} trong {totalPages}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Trước
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                >
-                  Sau
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Custom Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted-foreground">
+            Trang {page} trong {totalPages}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+            >
+              Trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+            >
+              Sau
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

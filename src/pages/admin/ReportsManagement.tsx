@@ -1,17 +1,7 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,45 +16,43 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { 
-  Search, 
   MoreHorizontal, 
   Eye, 
   Check, 
   X, 
-  Filter,
   AlertTriangle,
   MessageSquare,
-  User
+  User,
+  FileText
 } from 'lucide-react';
 import { mockReports } from '@/data/admin-mock';
 import { Report } from '@/types/admin';
+import StatCard from '@/components/admin/StatCard';
+import FilterSection from '@/components/admin/FilterSection';
+import DataTable from '@/components/admin/DataTable';
 
 export default function ReportsManagement() {
-  const [reports, setReports] = useState<Report[]>(mockReports);
+  const [reports] = useState<Report[]>(mockReports);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [reasonFilter, setReasonFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [responseText, setResponseText] = useState('');
 
   const filteredReports = reports.filter(report => {
-    const matchesSearch = 
-      report.user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      report.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (report.content && report.content.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesReason = reasonFilter === 'all' || report.reasonType === reasonFilter;
-    
-    return matchesSearch && matchesReason;
+    const matchesSearch = report.content.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || report.reasonType === typeFilter;
+    return matchesSearch && matchesType;
   });
+
+  const stats = {
+    totalReports: reports.length,
+    pendingReports: reports.length, // Since Report doesn't have status, showing total
+    resolvedReports: 0, // Since Report doesn't have status
+    rejectedReports: 0 // Since Report doesn't have status
+  };
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('vi-VN', {
@@ -77,188 +65,259 @@ export default function ReportsManagement() {
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'RESOLVED':
-        return <Badge className="bg-green-100 text-green-800">Đã giải quyết</Badge>;
-      case 'PENDING':
-        return <Badge className="bg-yellow-100 text-yellow-800">Đang xử lý</Badge>;
-      case 'DISMISSED':
-        return <Badge className="bg-red-100 text-red-800">Từ chối</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    const statusMap = {
+      'PENDING': { label: 'Đang chờ', variant: 'default' as const },
+      'RESOLVED': { label: 'Đã giải quyết', variant: 'secondary' as const },
+      'REJECTED': { label: 'Đã từ chối', variant: 'destructive' as const }
+    };
+    
+    const statusInfo = statusMap[status as keyof typeof statusMap] || { label: status, variant: 'outline' as const };
+    return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
-  const getReasonBadge = (reason: string) => {
-    switch (reason) {
-      case 'INAPPROPRIATE_CONTENT':
-        return (
-          <div className="flex items-center space-x-1">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            <span className="text-sm">Nội dung không phù hợp</span>
-          </div>
-        );
-      case 'COPYRIGHT_VIOLATION':
-        return (
-          <div className="flex items-center space-x-1">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <span className="text-sm">Vi phạm bản quyền</span>
-          </div>
-        );
-      case 'NOT_AS_DESCRIBED':
-        return (
-          <div className="flex items-center space-x-1">
-            <MessageSquare className="h-4 w-4 text-blue-600" />
-            <span className="text-sm">Không đúng mô tả</span>
-          </div>
-        );
-      case 'UNRESPONSIVE_INSTRUCTOR':
-        return (
-          <div className="flex items-center space-x-1">
-            <User className="h-4 w-4 text-purple-600" />
-            <span className="text-sm">GV không phản hồi</span>
-          </div>
-        );
-      case 'INCOMPLETE_CONTENT':
-        return (
-          <div className="flex items-center space-x-1">
-            <MessageSquare className="h-4 w-4 text-gray-600" />
-            <span className="text-sm">Nội dung thiếu</span>
-          </div>
-        );
-      default:
-        return <span className="text-sm">{reason}</span>;
-    }
+  const getTypeBadge = (type: string) => {
+    const typeMap = {
+      'INAPPROPRIATE_CONTENT': { label: 'Nội dung không phù hợp', variant: 'destructive' as const },
+      'COPYRIGHT_VIOLATION': { label: 'Vi phạm bản quyền', variant: 'destructive' as const },
+      'NOT_AS_DESCRIBED': { label: 'Không đúng mô tả', variant: 'default' as const },
+      'UNRESPONSIVE_INSTRUCTOR': { label: 'GV không phản hồi', variant: 'secondary' as const },
+      'INCOMPLETE_CONTENT': { label: 'Nội dung thiếu', variant: 'secondary' as const }
+    };
+    
+    const typeInfo = typeMap[type as keyof typeof typeMap] || { label: type, variant: 'outline' as const };
+    return <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>;
   };
 
+  const handleResolveReport = (reportId: string) => {
+    console.log('Resolving report:', reportId, 'with response:', responseText);
+    setSelectedReport(null);
+    setResponseText('');
+  };
 
+  const handleRejectReport = (reportId: string) => {
+    console.log('Rejecting report:', reportId, 'with response:', responseText);
+    setSelectedReport(null);
+    setResponseText('');
+  };
+
+  const columns = [
+    {
+      key: 'report',
+      header: 'Báo cáo',
+      render: (report: Report) => (
+        <div className="max-w-xs">
+          <div className="font-medium truncate">Báo cáo khóa học</div>
+          <div className="text-sm text-muted-foreground truncate">
+            {report.content}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'reporter',
+      header: 'Người báo cáo',
+      render: (report: Report) => (
+        <div className="text-sm">
+          <div className="font-medium">{report.user.fullName}</div>
+          <div className="text-muted-foreground">{report.user.email}</div>
+        </div>
+      )
+    },
+    {
+      key: 'course',
+      header: 'Khóa học',
+      render: (report: Report) => (
+        <div className="text-sm">
+          <div className="font-medium truncate">{report.course.title}</div>
+          <div className="text-muted-foreground">{report.course.price.toLocaleString('vi-VN')} VND</div>
+        </div>
+      )
+    },
+    {
+      key: 'type',
+      header: 'Lý do',
+      render: (report: Report) => getTypeBadge(report.reasonType)
+    },
+    {
+      key: 'createdAt',
+      header: 'Ngày tạo',
+      render: (report: Report) => (
+        <div className="text-sm">{formatDate(report.createdAt)}</div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (report: Report) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Mở menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedReport(report)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setSelectedReport(report)}>
+              <Check className="mr-2 h-4 w-4" />
+              Giải quyết
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSelectedReport(report)}>
+              <X className="mr-2 h-4 w-4" />
+              Từ chối
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    }
+  ];
+
+  const typeOptions = [
+    { value: 'all', label: 'Tất cả lý do' },
+    { value: 'INAPPROPRIATE_CONTENT', label: 'Nội dung không phù hợp' },
+    { value: 'COPYRIGHT_VIOLATION', label: 'Vi phạm bản quyền' },
+    { value: 'NOT_AS_DESCRIBED', label: 'Không đúng mô tả' },
+    { value: 'UNRESPONSIVE_INSTRUCTOR', label: 'GV không phản hồi' },
+    { value: 'INCOMPLETE_CONTENT', label: 'Nội dung thiếu' }
+  ];
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Quản lý báo cáo</h1>
         <p className="text-muted-foreground">
-          Xem và xử lý các báo cáo từ người dùng về khóa học
+          Xem xét và xử lý các báo cáo từ người dùng
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách báo cáo</CardTitle>
-          <CardDescription>
-            Tổng cộng {reports.length} báo cáo, {filteredReports.length} báo cáo được hiển thị
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm theo tên người báo cáo, email hoặc mô tả..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
-            </div>
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Tổng báo cáo"
+          value={stats.totalReports.toString()}
+          description="Tất cả báo cáo"
+          icon={FileText}
+        />
+        <StatCard
+          title="Đang chờ"
+          value={stats.pendingReports.toString()}
+          description="Báo cáo chờ xử lý"
+          icon={AlertTriangle}
+        />
+        <StatCard
+          title="Đã giải quyết"
+          value={stats.resolvedReports.toString()}
+          description="Báo cáo đã xử lý"
+          icon={Check}
+        />
+        <StatCard
+          title="Đã từ chối"
+          value={stats.rejectedReports.toString()}
+          description="Báo cáo bị từ chối"
+          icon={X}
+        />
+      </div>
 
-            <Select value={reasonFilter} onValueChange={setReasonFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Lý do báo cáo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả lý do</SelectItem>
-                <SelectItem value="INAPPROPRIATE_CONTENT">Nội dung không phù hợp</SelectItem>
-                <SelectItem value="COPYRIGHT_VIOLATION">Vi phạm bản quyền</SelectItem>
-                <SelectItem value="NOT_AS_DESCRIBED">Không đúng mô tả</SelectItem>
-                <SelectItem value="UNRESPONSIVE_INSTRUCTOR">GV không phản hồi</SelectItem>
-                <SelectItem value="INCOMPLETE_CONTENT">Nội dung thiếu</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <FilterSection
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Tìm kiếm theo nội dung báo cáo..."
+        filters={[
+          {
+            value: typeFilter,
+            onChange: setTypeFilter,
+            options: typeOptions,
+            placeholder: "Lọc theo lý do"
+          }
+        ]}
+      />
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Người báo cáo</TableHead>
-                  <TableHead>Khóa học</TableHead>
-                  <TableHead>Lý do</TableHead>
-                  <TableHead>Mô tả</TableHead>
-                  <TableHead>Ngày tạo</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredReports.map((report) => (
-                  <TableRow key={report.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{report.user.fullName}</div>
-                        <div className="text-sm text-muted-foreground">{report.user.email}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{report.course.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Giá: {report.course.price.toLocaleString('vi-VN')} VND
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getReasonBadge(report.reasonType)}
-                    </TableCell>
-                    <TableCell className="max-w-xs">
-                      <div className="truncate" title={report.content}>
-                        {report.content || 'Không có mô tả'}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {formatDate(report.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Mở menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                          <DropdownMenuItem>
-                            <Eye className="mr-2 h-4 w-4" />
-                            Xem chi tiết
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-green-600">
-                            <Check className="mr-2 h-4 w-4" />
-                            Đánh dấu đã giải quyết
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">
-                            <X className="mr-2 h-4 w-4" />
-                            Từ chối báo cáo
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+      <DataTable
+        title="Danh sách báo cáo"
+        description={`Tổng cộng ${reports.length} báo cáo`}
+        data={filteredReports}
+        columns={columns}
+        emptyMessage="Không tìm thấy báo cáo nào"
+      />
 
-          {filteredReports.length === 0 && (
-            <div className="text-center py-8">
-              <AlertTriangle className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Không có báo cáo</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Không tìm thấy báo cáo nào phù hợp với bộ lọc hiện tại.
-              </p>
+      {/* Report Detail Dialog */}
+      <Dialog open={!!selectedReport} onOpenChange={() => setSelectedReport(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết báo cáo</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết và xử lý báo cáo
+            </DialogDescription>
+          </DialogHeader>
+          {selectedReport && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Nội dung báo cáo</label>
+                <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
+                  {selectedReport.content}
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Người báo cáo</label>
+                  <div className="mt-1">
+                    <p className="text-sm font-medium">{selectedReport.user.fullName}</p>
+                    <p className="text-sm text-muted-foreground">{selectedReport.user.email}</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Khóa học</label>
+                  <div className="mt-1">
+                    <p className="text-sm font-medium">{selectedReport.course.title}</p>
+                    <p className="text-sm text-muted-foreground">{selectedReport.course.price.toLocaleString('vi-VN')} VND</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Lý do báo cáo</label>
+                  <div className="mt-1">
+                    {getTypeBadge(selectedReport.reasonType)}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Ngày tạo</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatDate(selectedReport.createdAt)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="border-t pt-4">
+                <label className="text-sm font-medium">Phản hồi</label>
+                <Textarea
+                  value={responseText}
+                  onChange={(e) => setResponseText(e.target.value)}
+                  placeholder="Nhập phản hồi cho báo cáo này..."
+                  className="mt-1"
+                  rows={3}
+                />
+                <div className="flex justify-end space-x-2 mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleRejectReport(selectedReport.id)}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Từ chối
+                  </Button>
+                  <Button onClick={() => handleResolveReport(selectedReport.id)}>
+                    <Check className="mr-2 h-4 w-4" />
+                    Giải quyết
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
+  }

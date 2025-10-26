@@ -1,16 +1,6 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,30 +15,51 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Search, 
   MoreHorizontal, 
   Eye, 
   Edit, 
   Trash2, 
   UserPlus,
-  Filter
+  Users,
+  UserCheck,
+  UserX,
+  DollarSign
 } from 'lucide-react';
 import { mockUsers } from '@/data/admin-mock';
 import { User } from '@/types/admin';
+import DataTable from '@/components/admin/DataTable';
+import FilterSection from '@/components/admin/FilterSection';
+import StatCard from '@/components/admin/StatCard';
 
 export default function UsersManagement() {
   const [users] = useState<User[]>(mockUsers);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
 
-  const filteredUsers = users.filter(user =>
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || 
+      (statusFilter === 'active' && user.courseSellerProfile?.isActive) ||
+      (statusFilter === 'inactive' && !user.courseSellerProfile?.isActive);
+    
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
+  });
+
+  const stats = {
+    totalUsers: users.length,
+    activeUsers: users.filter(user => user.courseSellerProfile?.isActive).length,
+    inactiveUsers: users.filter(user => !user.courseSellerProfile?.isActive).length,
+    totalWalletBalance: users.reduce((sum, user) => sum + (user.wallet?.allowance || 0), 0)
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -59,190 +70,288 @@ export default function UsersManagement() {
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
-      case 'ADMINISTRATOR':
-        return <Badge variant="destructive">Admin</Badge>;
-      case 'COURSESELLER':
-        return <Badge variant="secondary">Giảng viên</Badge>;
+      case 'admin':
+        return <Badge className="bg-red-100 text-red-800">Admin</Badge>;
+      case 'course_seller':
+        return <Badge className="bg-blue-100 text-blue-800">Giảng viên</Badge>;
+      case 'student':
+        return <Badge className="bg-green-100 text-green-800">Học viên</Badge>;
       default:
-        return <Badge variant="outline">Học viên</Badge>;
+        return <Badge variant="outline">Không xác định</Badge>;
     }
   };
 
+  const getStatusBadge = (user: User) => {
+    const isActive = user.courseSellerProfile?.isActive;
+    return isActive ? 
+      <Badge className="bg-green-100 text-green-800">Hoạt động</Badge> :
+      <Badge className="bg-gray-100 text-gray-800">Không hoạt động</Badge>;
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('vi-VN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const statusOptions = [
+    { value: 'all', label: 'Tất cả trạng thái' },
+    { value: 'active', label: 'Hoạt động' },
+    { value: 'inactive', label: 'Không hoạt động' }
+  ];
+
+  const roleOptions = [
+    { value: 'all', label: 'Tất cả vai trò' },
+    { value: 'student', label: 'Học viên' },
+    { value: 'course_seller', label: 'Giảng viên' },
+    { value: 'admin', label: 'Admin' }
+  ];
+
+  const columns = [
+    {
+      key: 'user',
+      header: 'Người dùng',
+      render: (user: User) => (
+        <div className="flex items-center space-x-3">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user.profilePicture} />
+            <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="font-medium">{user.fullName}</div>
+            <div className="text-sm text-muted-foreground">{user.email}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'role',
+      header: 'Vai trò',
+      render: (user: User) => getRoleBadge(user.role)
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      render: (user: User) => getStatusBadge(user)
+    },
+    {
+      key: 'wallet',
+      header: 'Số dư ví',
+      render: (user: User) => (
+        <div className="font-medium">
+          {user.wallet ? formatCurrency(user.wallet.allowance) : 'Chưa có ví'}
+        </div>
+      )
+    },
+    {
+      key: 'createdAt',
+      header: 'Ngày tạo',
+      render: (user: User) => (
+        <div className="text-sm">{formatDate(user.createdAt)}</div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (user: User) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Mở menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedUser(user)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <Edit className="mr-2 h-4 w-4" />
+              Chỉnh sửa
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Xóa người dùng
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    }
+  ];
+
+  const filters = [
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      value: statusFilter,
+      onChange: setStatusFilter,
+      options: statusOptions,
+      placeholder: 'Chọn trạng thái'
+    },
+    {
+      key: 'role',
+      label: 'Vai trò',
+      value: roleFilter,
+      onChange: setRoleFilter,
+      options: roleOptions,
+      placeholder: 'Chọn vai trò'
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý người dùng</h1>
-          <p className="text-muted-foreground">
-            Quản lý tất cả người dùng trong hệ thống
-          </p>
-        </div>
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Thêm người dùng
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý người dùng</h1>
+        <p className="text-muted-foreground">
+          Quản lý tất cả người dùng trong hệ thống
+        </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách người dùng</CardTitle>
-          <CardDescription>
-            Tổng cộng {users.length} người dùng
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Tìm kiếm theo tên hoặc email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline">
-              <Filter className="mr-2 h-4 w-4" />
-              Lọc
-            </Button>
-          </div>
+      {/* Statistics Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Tổng người dùng"
+          value={stats.totalUsers.toString()}
+          description="Tất cả người dùng"
+          icon={Users}
+        />
+        <StatCard
+          title="Đang hoạt động"
+          value={stats.activeUsers.toString()}
+          description="Người dùng hoạt động"
+          icon={UserCheck}
+          trend={{
+            value: Math.round((stats.activeUsers / stats.totalUsers) * 100),
+            label: "% tổng số",
+            isPositive: true
+          }}
+        />
+        <StatCard
+          title="Không hoạt động"
+          value={stats.inactiveUsers.toString()}
+          description="Người dùng không hoạt động"
+          icon={UserX}
+        />
+        <StatCard
+          title="Tổng số dư ví"
+          value={formatCurrency(stats.totalWalletBalance)}
+          description="Tổng tiền trong hệ thống"
+          icon={DollarSign}
+        />
+      </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Người dùng</TableHead>
-                  <TableHead>Vai trò</TableHead>
-                  <TableHead>Trình độ</TableHead>
-                  <TableHead>Số dư ví</TableHead>
-                  <TableHead>Ngày tham gia</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={user.profilePicture} />
-                          <AvatarFallback>
-                            {user.fullName.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{user.fullName}</div>
-                          <div className="text-sm text-muted-foreground">{user.email}</div>
-                        </div>
+      <FilterSection
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Tìm kiếm theo tên hoặc email..."
+        filters={filters}
+        showAddButton={true}
+        onAddClick={() => console.log('Add user')}
+        addButtonText="Thêm người dùng"
+      />
+
+      <DataTable
+        title="Danh sách người dùng"
+        description={`Hiển thị ${filteredUsers.length} trong tổng số ${users.length} người dùng`}
+        data={filteredUsers}
+        columns={columns}
+        emptyMessage="Không tìm thấy người dùng nào"
+      />
+
+      {/* User Detail Dialog */}
+      <Dialog open={!!selectedUser} onOpenChange={() => setSelectedUser(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết người dùng</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết về người dùng
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16">
+                  <AvatarImage src={selectedUser.profilePicture} />
+                  <AvatarFallback className="text-lg">
+                    {selectedUser.fullName.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="text-lg font-semibold">{selectedUser.fullName}</h3>
+                  <p className="text-muted-foreground">{selectedUser.email}</p>
+                  <div className="flex items-center space-x-2 mt-2">
+                    {getRoleBadge(selectedUser.role)}
+                    {getStatusBadge(selectedUser)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">ID người dùng</label>
+                  <p className="text-sm text-muted-foreground font-mono mt-1">
+                    {selectedUser.id}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Số điện thoại</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedUser.phoneNumber || 'Chưa cập nhật'}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Ngày tạo</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatDate(selectedUser.createdAt)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Ngày sinh</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatDate(selectedUser.dateOfBirth)}
+                  </p>
+                </div>
+              </div>
+
+              {selectedUser.wallet && (
+                <div>
+                  <label className="text-sm font-medium">Thông tin ví</label>
+                  <div className="mt-2 p-3 bg-muted rounded-lg">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">ID ví</p>
+                        <p className="text-sm font-mono">{selectedUser.wallet.id}</p>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {getRoleBadge(user.role)}
-                    </TableCell>
-                    <TableCell>
-                      {user.englishLevel ? (
-                        <Badge variant="outline">{user.englishLevel}</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">Chưa xác định</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {user.wallet ? formatCurrency(user.wallet.allowance) : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      {new Date(user.createdAt).toLocaleDateString('vi-VN')}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Xem chi tiết
-                              </DropdownMenuItem>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Chi tiết người dùng</DialogTitle>
-                                <DialogDescription>
-                                  Thông tin chi tiết của {user.fullName}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-4 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Họ tên</label>
-                                    <p className="text-sm text-muted-foreground">{user.fullName}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Email</label>
-                                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Số điện thoại</label>
-                                    <p className="text-sm text-muted-foreground">{user.phoneNumber || 'Chưa cập nhật'}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Ngày sinh</label>
-                                    <p className="text-sm text-muted-foreground">
-                                      {new Date(user.dateOfBirth).toLocaleDateString('vi-VN')}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Trình độ tiếng Anh</label>
-                                    <p className="text-sm text-muted-foreground">{user.englishLevel || 'Chưa xác định'}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Vai trò</label>
-                                    <p className="text-sm text-muted-foreground">{user.role || 'Học viên'}</p>
-                                  </div>
-                                </div>
-                                <div>
-                                  <label className="text-sm font-medium">Mục tiêu học tập</label>
-                                  <div className="flex flex-wrap gap-2 mt-1">
-                                    {user.learningGoals.map((goal, index) => (
-                                      <Badge key={index} variant="outline">{goal}</Badge>
-                                    ))}
-                                  </div>
-                                </div>
-                                {user.wallet && (
-                                  <div>
-                                    <label className="text-sm font-medium">Thông tin ví</label>
-                                    <p className="text-sm text-muted-foreground">
-                                      Số dư: {formatCurrency(user.wallet.allowance)}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Xóa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Số dư</p>
+                        <p className="text-sm font-medium">
+                          {formatCurrency(selectedUser.wallet.allowance)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-2 pt-4 border-t">
+                <Button variant="outline">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Chỉnh sửa
+                </Button>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa người dùng
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

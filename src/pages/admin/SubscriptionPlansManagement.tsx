@@ -1,16 +1,7 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,313 +16,361 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { 
-  Search, 
   MoreHorizontal, 
   Eye, 
   Edit, 
   Plus,
   CreditCard,
   Users,
-  Calendar
+  Calendar,
+  Package
 } from 'lucide-react';
 import { mockSubscriptionPlans } from '@/data/admin-mock';
 import { SubscriptionPlan } from '@/types/admin';
+import StatCard from '@/components/admin/StatCard';
+import FilterSection from '@/components/admin/FilterSection';
+import DataTable from '@/components/admin/DataTable';
 
 export default function SubscriptionPlansManagement() {
   const [plans] = useState<SubscriptionPlan[]>(mockSubscriptionPlans);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [newPlan, setNewPlan] = useState({
+    name: '',
+    description: '',
+    maxCourses: 0,
+    monthlyFee: 0
+  });
 
   const filteredPlans = plans.filter(plan =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (plan.description && plan.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const formatCurrency = (value: number) => {
+  const stats = {
+    totalPlans: plans.length,
+    averageFee: plans.reduce((sum, plan) => sum + plan.monthlyFee, 0) / plans.length,
+    maxCourses: Math.max(...plans.map(plan => plan.maxCourses)),
+    minFee: Math.min(...plans.map(plan => plan.monthlyFee))
+  };
+
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
       currency: 'VND'
-    }).format(value);
+    }).format(amount);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+  const handleCreatePlan = () => {
+    console.log('Creating plan:', newPlan);
+    setIsCreateDialogOpen(false);
+    setNewPlan({ name: '', description: '', maxCourses: 0, monthlyFee: 0 });
+  };
+
+  const handleEditPlan = () => {
+    console.log('Editing plan:', selectedPlan?.id, newPlan);
+    setIsEditDialogOpen(false);
+    setSelectedPlan(null);
+    setNewPlan({ name: '', description: '', maxCourses: 0, monthlyFee: 0 });
+  };
+
+  const openEditDialog = (plan: SubscriptionPlan) => {
+    setSelectedPlan(plan);
+    setNewPlan({
+      name: plan.name,
+      description: plan.description || '',
+      maxCourses: plan.maxCourses,
+      monthlyFee: plan.monthlyFee
     });
+    setIsEditDialogOpen(true);
   };
 
-  const getStatusBadge = () => {
-    return <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>;
-  };
-
-  const getDurationText = (duration: number) => {
-    if (duration === 30) return '1 tháng';
-    if (duration === 90) return '3 tháng';
-    if (duration === 180) return '6 tháng';
-    if (duration === 365) return '1 năm';
-    return `${duration} ngày`;
-  };
-
-  const getStats = () => {
-    const total = plans.length;
-    const active = plans.length; // All plans are considered active since there's no isActive field
-    const totalRevenue = plans.reduce((sum, plan) => sum + plan.monthlyFee, 0);
-    const totalSubscribers = 0; // No subscribers field available
-
-    return { total, active, totalRevenue, totalSubscribers };
-  };
-
-  const stats = getStats();
+  const columns = [
+    {
+      key: 'plan',
+      header: 'Gói đăng ký',
+      render: (plan: SubscriptionPlan) => (
+        <div>
+          <div className="font-medium">{plan.name}</div>
+          <div className="text-sm text-muted-foreground">
+            {plan.description || 'Không có mô tả'}
+          </div>
+        </div>
+      )
+    },
+    {
+      key: 'maxCourses',
+      header: 'Số khóa học tối đa',
+      render: (plan: SubscriptionPlan) => (
+        <div className="text-center">
+          <Badge variant="outline">{plan.maxCourses} khóa học</Badge>
+        </div>
+      )
+    },
+    {
+      key: 'monthlyFee',
+      header: 'Phí hàng tháng',
+      render: (plan: SubscriptionPlan) => (
+        <div className="font-medium text-green-600">
+          {formatCurrency(plan.monthlyFee)}
+        </div>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      render: (plan: SubscriptionPlan) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Mở menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+            <DropdownMenuItem onClick={() => setSelectedPlan(plan)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Xem chi tiết
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => openEditDialog(plan)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Chỉnh sửa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quản lý gói đăng ký</h1>
-          <p className="text-muted-foreground">
-            Quản lý các gói đăng ký premium trong hệ thống
-          </p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Tạo gói mới
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Tạo gói đăng ký mới</DialogTitle>
-              <DialogDescription>
-                Tạo gói đăng ký premium mới cho người dùng
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Tên gói</label>
-                  <Input placeholder="Nhập tên gói..." className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Giá (VND)</label>
-                  <Input type="number" placeholder="0" className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Thời hạn (ngày)</label>
-                  <Input type="number" placeholder="30" className="mt-1" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Giảm giá (%)</label>
-                  <Input type="number" placeholder="0" className="mt-1" />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Mô tả</label>
-                <Input placeholder="Mô tả gói đăng ký..." className="mt-1" />
-              </div>
-              <div className="flex space-x-2 pt-4">
-                <Button variant="outline" className="flex-1">
-                  Hủy
-                </Button>
-                <Button className="flex-1">
-                  Tạo gói
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý gói đăng ký</h1>
+        <p className="text-muted-foreground">
+          Quản lý các gói đăng ký cho giảng viên
+        </p>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng gói</CardTitle>
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Đang hoạt động</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tổng người đăng ký</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalSubscribers}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Doanh thu ước tính</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Tổng gói"
+          value={stats.totalPlans.toString()}
+          description="Số gói đăng ký"
+          icon={Package}
+        />
+        <StatCard
+          title="Phí trung bình"
+          value={formatCurrency(stats.averageFee)}
+          description="Phí hàng tháng TB"
+          icon={CreditCard}
+        />
+        <StatCard
+          title="Khóa học tối đa"
+          value={stats.maxCourses.toString()}
+          description="Gói cao nhất"
+          icon={Users}
+        />
+        <StatCard
+          title="Phí thấp nhất"
+          value={formatCurrency(stats.minFee)}
+          description="Gói cơ bản"
+          icon={Calendar}
+        />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Danh sách gói đăng ký</CardTitle>
-          <CardDescription>
-            Tổng cộng {plans.length} gói đăng ký
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <FilterSection
+        searchValue={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Tìm kiếm theo tên gói hoặc mô tả..."
+        showAddButton={true}
+        onAddClick={() => setIsCreateDialogOpen(true)}
+        addButtonText="Tạo gói mới"
+      />
+
+      <DataTable
+        title="Danh sách gói đăng ký"
+        description={`Tổng cộng ${plans.length} gói đăng ký`}
+        data={filteredPlans}
+        columns={columns}
+        emptyMessage="Không tìm thấy gói đăng ký nào"
+      />
+
+      {/* Create Plan Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Tạo gói đăng ký mới</DialogTitle>
+            <DialogDescription>
+              Tạo gói đăng ký mới cho giảng viên
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Tên gói</label>
               <Input
-                placeholder="Tìm kiếm theo tên gói hoặc mô tả..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                value={newPlan.name}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nhập tên gói đăng ký"
+                className="mt-1"
               />
             </div>
+            <div>
+              <label className="text-sm font-medium">Mô tả</label>
+              <Input
+                value={newPlan.description}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Nhập mô tả gói đăng ký"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Số khóa học tối đa</label>
+              <Input
+                type="number"
+                value={newPlan.maxCourses}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, maxCourses: parseInt(e.target.value) || 0 }))}
+                placeholder="Nhập số khóa học tối đa"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Phí hàng tháng (VND)</label>
+              <Input
+                type="number"
+                value={newPlan.monthlyFee}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, monthlyFee: parseFloat(e.target.value) || 0 }))}
+                placeholder="Nhập phí hàng tháng"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button onClick={handleCreatePlan}>
+                <Plus className="mr-2 h-4 w-4" />
+                Tạo gói
+              </Button>
+            </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Tên gói</TableHead>
-                  <TableHead>Giá</TableHead>
-                  <TableHead>Số khóa học tối đa</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                  <TableHead className="w-[70px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPlans.map((plan) => (
-                  <TableRow key={plan.id}>
-                    <TableCell>
-                      <div>
-                        <div className="font-medium">{plan.name}</div>
-                        <div className="text-sm text-muted-foreground line-clamp-1">
-                          {plan.description || 'Không có mô tả'}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-medium">{formatCurrency(plan.monthlyFee)}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{plan.maxCourses} khóa học</div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">0 người dùng</div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className="bg-green-100 text-green-800">Hoạt động</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Hành động</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                Xem chi tiết
-                              </DropdownMenuItem>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Chi tiết gói đăng ký</DialogTitle>
-                                <DialogDescription>
-                                  Thông tin chi tiết của gói "{plan.name}"
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="grid gap-6 py-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Tên gói</label>
-                                    <p className="text-sm text-muted-foreground">{plan.name}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Giá</label>
-                                    <p className="text-sm text-muted-foreground font-medium">{formatCurrency(plan.monthlyFee)}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Số khóa học tối đa</label>
-                                    <p className="text-sm text-muted-foreground">{plan.maxCourses} khóa học</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Mô tả</label>
-                                    <p className="text-sm text-muted-foreground">{plan.description || 'Không có mô tả'}</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Số người đăng ký</label>
-                                    <p className="text-sm text-muted-foreground">0 người dùng</p>
-                                  </div>
-                                  <div>
-                                    <label className="text-sm font-medium">Trạng thái</label>
-                                    <div className="mt-1"><Badge className="bg-green-100 text-green-800">Hoạt động</Badge></div>
-                                  </div>
-                                </div>
-                                
-                                <div>
-                                  <label className="text-sm font-medium">Mô tả</label>
-                                  <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
-                                </div>
-                                
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <label className="text-sm font-medium">Gói đăng ký</label>
-                                    <p className="text-sm text-muted-foreground">{plan.name}</p>
-                                  </div>
-                                </div>
-
-                                <div className="flex space-x-2 pt-4 border-t">
-                                  <Button variant="outline" className="flex-1">
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Chỉnh sửa
-                                  </Button>
-                                </div>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Chỉnh sửa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+      {/* Edit Plan Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa gói đăng ký</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin gói đăng ký
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Tên gói</label>
+              <Input
+                value={newPlan.name}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Nhập tên gói đăng ký"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Mô tả</label>
+              <Input
+                value={newPlan.description}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Nhập mô tả gói đăng ký"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Số khóa học tối đa</label>
+              <Input
+                type="number"
+                value={newPlan.maxCourses}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, maxCourses: parseInt(e.target.value) || 0 }))}
+                placeholder="Nhập số khóa học tối đa"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Phí hàng tháng (VND)</label>
+              <Input
+                type="number"
+                value={newPlan.monthlyFee}
+                onChange={(e) => setNewPlan(prev => ({ ...prev, monthlyFee: parseFloat(e.target.value) || 0 }))}
+                placeholder="Nhập phí hàng tháng"
+                className="mt-1"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Hủy
+              </Button>
+              <Button onClick={handleEditPlan}>
+                <Edit className="mr-2 h-4 w-4" />
+                Cập nhật
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
+
+      {/* Plan Detail Dialog */}
+      <Dialog open={!!selectedPlan && !isEditDialogOpen} onOpenChange={() => setSelectedPlan(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Chi tiết gói đăng ký</DialogTitle>
+            <DialogDescription>
+              Thông tin chi tiết về gói đăng ký
+            </DialogDescription>
+          </DialogHeader>
+          {selectedPlan && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Tên gói</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedPlan.name}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">ID</label>
+                  <p className="text-sm text-muted-foreground font-mono mt-1">
+                    {selectedPlan.id}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Số khóa học tối đa</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {selectedPlan.maxCourses} khóa học
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Phí hàng tháng</label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {formatCurrency(selectedPlan.monthlyFee)}
+                  </p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Mô tả</label>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {selectedPlan.description || 'Không có mô tả'}
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
