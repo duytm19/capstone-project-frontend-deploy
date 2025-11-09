@@ -23,7 +23,7 @@ import {
   mockRevenueData, 
   mockUserGrowthData, 
   mockCourseStatusData 
-} from '@/data/admin-mock';
+} from '@/data/mock';
 import StatCard from '@/components/admin/StatCard';
 import ChartCard from '@/components/admin/ChartCard';
 import ActivityFeed from '@/components/admin/ActivityFeed';

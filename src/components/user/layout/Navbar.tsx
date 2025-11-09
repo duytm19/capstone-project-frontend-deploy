@@ -1,17 +1,20 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, BookOpen, User } from 'lucide-react';
+import { Menu, X, BookOpen, User, ShoppingCart, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/context/CartContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { count } = useCart();
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/courses', label: 'Courses' },
-    { to: '/about', label: 'About' },
+    { to: '/', label: 'Trang chủ' },
+    { to: '/courses', label: 'Khóa học' },
+    { to: '/flashcards', label: 'Thẻ ghi nhớ' },
+    { to: '/about', label: 'Giới thiệu' },
     { to: '/blog', label: 'Blog' },
-    { to: '/contact', label: 'Contact' },
+    { to: '/contact', label: 'Liên hệ' },
   ];
 
   return (
@@ -23,7 +26,7 @@ const Navbar = () => {
             <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center shadow-accent transition-transform group-hover:scale-105">
               <BookOpen className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent font-['Poppins']">
+            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent font-['Be Vietnam Pro']">
               SkillBoost
             </span>
           </Link>
@@ -49,15 +52,38 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <Link to="/wallet">
+              <Button variant="ghost" size="default">
+                <Wallet className="w-4 h-4 mr-2" />
+                Ví
+              </Button>
+            </Link>
+            <Link to="/cart">
+              <Button variant="ghost" size="default" className="relative">
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Giỏ hàng
+                {count > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                    {count}
+                  </span>
+                )}
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button variant="ghost" size="default">
+                <User className="w-4 h-4 mr-2" />
+                Hồ sơ
+              </Button>
+            </Link>
             <Link to="/login">
               <Button variant="ghost" size="default">
                 <User className="w-4 h-4 mr-2" />
-                Login
+                Đăng nhập
               </Button>
             </Link>
             <Link to="/login">
               <Button className="bg-gradient-primary shadow-accent hover:opacity-90 transition-opacity">
-                Get Started
+                Bắt đầu
               </Button>
             </Link>
           </div>
@@ -92,15 +118,38 @@ const Navbar = () => {
                 </NavLink>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border mt-2">
+                <Link to="/wallet" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full">
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Ví
+                  </Button>
+                </Link>
+                <Link to="/cart" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full relative">
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Giỏ hàng
+                    {count > 0 && (
+                      <span className="absolute top-1 right-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                        {count}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
+                <Link to="/profile" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full">
+                    <User className="w-4 h-4 mr-2" />
+                    Hồ sơ
+                  </Button>
+                </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button variant="outline" size="lg" className="w-full">
                     <User className="w-4 h-4 mr-2" />
-                    Login
+                    Đăng nhập
                   </Button>
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}>
                   <Button size="lg" className="w-full bg-gradient-primary shadow-accent">
-                    Get Started
+                    Bắt đầu
                   </Button>
                 </Link>
               </div>

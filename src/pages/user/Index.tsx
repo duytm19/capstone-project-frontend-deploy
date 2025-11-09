@@ -1,15 +1,17 @@
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
-import Hero from '@/components/home/Hero';
-import Features from '@/components/home/Features';
-import CourseCard from '@/components/course/CourseCard';
-import { courses } from '@/data/courses';
+import Navbar from '@/components/user/layout/Navbar';
+import Footer from '@/components/user/layout/Footer';
+import Hero from '@/components/user/home/Hero';
+import Features from '@/components/user/home/Features';
+import CourseCard from '@/components/user/course/CourseCard';
+import { mockCourses } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Play, Quote } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Index = () => {
-  const popularCourses = courses.filter(course => course.isPopular).slice(0, 3);
+  const popularCourses = [...mockCourses]
+    .sort((a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0))
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen">
@@ -23,11 +25,11 @@ const Index = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Poppins']">
-                Most Popular <span className="text-primary">Courses</span>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Be Vietnam Pro']">
+                Khóa học <span className="text-primary">phổ biến nhất</span>
               </h2>
               <p className="text-lg text-muted-foreground">
-                Join thousands of students already learning with our top-rated courses
+                Tham gia hàng nghìn học viên đang học với các khóa học được đánh giá cao của chúng tôi
               </p>
             </div>
 
@@ -40,7 +42,7 @@ const Index = () => {
             <div className="text-center">
               <Link to="/courses">
                 <Button size="lg" className="bg-gradient-primary shadow-accent">
-                  View All Courses
+                  Xem tất cả khóa học
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
@@ -52,11 +54,11 @@ const Index = () => {
         <section className="py-20 bg-gradient-hero text-primary-foreground">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Poppins']">
-                How It Works
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Be Vietnam Pro']">
+                Cách hoạt động
               </h2>
               <p className="text-lg text-primary-foreground/80">
-                Start your learning journey in three simple steps
+                Bắt đầu hành trình học tập với ba bước đơn giản
               </p>
             </div>
 
@@ -64,25 +66,25 @@ const Index = () => {
               {[
                 {
                   step: '01',
-                  title: 'Choose Your Course',
-                  description: 'Browse our extensive catalog and select the perfect course for your goals',
+                  title: 'Chọn khóa học của bạn',
+                  description: 'Duyệt danh mục phong phú và chọn khóa học phù hợp với mục tiêu',
                 },
                 {
                   step: '02',
-                  title: 'Learn at Your Pace',
-                  description: 'Access video lessons, exercises, and materials anytime, anywhere',
+                  title: 'Học theo tốc độ của bạn',
+                  description: 'Truy cập bài giảng video, bài tập và tài liệu mọi lúc mọi nơi',
                 },
                 {
                   step: '03',
-                  title: 'Earn Certificate',
-                  description: 'Complete the course and receive a recognized certificate of achievement',
+                  title: 'Nhận chứng chỉ',
+                  description: 'Hoàn thành khóa học và nhận chứng chỉ được công nhận',
                 },
               ].map((item, index) => (
                 <div key={index} className="text-center">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-secondary/20 backdrop-blur-sm border-2 border-secondary mb-6">
                     <span className="text-3xl font-bold text-secondary">{item.step}</span>
                   </div>
-                  <h3 className="text-2xl font-semibold mb-3 font-['Poppins']">{item.title}</h3>
+                  <h3 className="text-2xl font-semibold mb-3 font-['Be Vietnam Pro']">{item.title}</h3>
                   <p className="text-primary-foreground/70">{item.description}</p>
                 </div>
               ))}
@@ -94,11 +96,11 @@ const Index = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Poppins']">
-                What Students Say
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Be Vietnam Pro']">
+                Học viên nói gì
               </h2>
               <p className="text-lg text-muted-foreground">
-                Real stories from real students who transformed their English skills
+                Câu chuyện thực tế từ những học viên đã cải thiện kỹ năng tiếng Anh
               </p>
             </div>
 
@@ -106,21 +108,21 @@ const Index = () => {
               {[
                 {
                   name: 'Maria Rodriguez',
-                  role: 'Business Professional',
+                  role: 'Chuyên viên kinh doanh',
                   image: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=100&h=100&fit=crop',
-                  content: 'SkillBoost helped me land my dream job! The Business English course was exactly what I needed.',
+                  content: 'SkillBoost đã giúp tôi đạt được công việc mơ ước! Khóa Business English đúng là những gì tôi cần.',
                 },
                 {
                   name: 'Ahmed Hassan',
-                  role: 'University Student',
+                  role: 'Sinh viên đại học',
                   image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-                  content: 'The IELTS preparation course was comprehensive and helped me achieve my target score.',
+                  content: 'Khóa luyện thi IELTS rất đầy đủ và giúp tôi đạt band mục tiêu.',
                 },
                 {
                   name: 'Jennifer Kim',
-                  role: 'English Teacher',
+                  role: 'Giáo viên tiếng Anh',
                   image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop',
-                  content: 'As a teacher myself, I\'m impressed by the quality of instruction and course materials.',
+                  content: 'Là một giáo viên, tôi rất ấn tượng với chất lượng giảng dạy và tài liệu.',
                 },
               ].map((testimonial, index) => (
                 <div
@@ -152,22 +154,22 @@ const Index = () => {
         <section className="py-20 bg-gradient-primary">
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-3xl mx-auto space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground font-['Poppins']">
-                Ready to Start Learning?
+              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground font-['Be Vietnam Pro']">
+                Sẵn sàng bắt đầu học?
               </h2>
               <p className="text-xl text-primary-foreground/80">
-                Join thousands of students and begin your journey to English fluency today
+                Tham gia cùng hàng nghìn học viên và bắt đầu hành trình chinh phục tiếng Anh ngay hôm nay
               </p>
               <div className="flex flex-wrap gap-4 justify-center pt-4">
                 <Link to="/courses">
                   <Button size="lg" variant="secondary" className="shadow-accent text-lg h-14 px-8">
-                    Browse All Courses
+                    Xem tất cả khóa học
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
                 </Link>
                 <Button size="lg" variant="outline" className="border-2 border-primary-foreground/20 hover:bg-primary-foreground/10 text-primary-foreground text-lg h-14 px-8">
                   <Play className="w-5 h-5 mr-2" />
-                  Watch Demo
+                  Xem demo
                 </Button>
               </div>
             </div>

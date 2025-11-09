@@ -32,7 +32,7 @@ import {
   FileText,
   User
 } from 'lucide-react';
-import { mockCourseSellerApplications } from '@/data/admin-mock';
+import { mockCourseSellerApplications } from '@/data/mock';
 import { CourseSellerApplication } from '@/types/admin';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';

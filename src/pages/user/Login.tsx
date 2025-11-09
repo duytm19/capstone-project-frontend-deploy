@@ -18,8 +18,8 @@ const Login = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: isLogin ? "Welcome back!" : "Account created!",
-      description: isLogin ? "You've successfully logged in." : "Your account has been created successfully.",
+      title: isLogin ? "Chào mừng bạn quay lại!" : "Tạo tài khoản thành công!",
+      description: isLogin ? "Bạn đã đăng nhập thành công." : "Tài khoản của bạn đã được tạo thành công.",
     });
   };
 
@@ -39,30 +39,30 @@ const Login = () => {
             <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center shadow-accent transition-transform group-hover:scale-105">
               <BookOpen className="w-8 h-8" />
             </div>
-            <span className="text-4xl font-bold font-['Poppins']">SkillBoost</span>
+            <span className="text-4xl font-bold font-['Be Vietnam Pro']">SkillBoost</span>
           </Link>
           
           <div className="space-y-4">
-            <h1 className="text-4xl font-bold leading-tight font-['Poppins']">
-              Transform Your English Skills
+            <h1 className="text-4xl font-bold leading-tight font-['Be Vietnam Pro']">
+              Nâng cấp kỹ năng tiếng Anh của bạn
             </h1>
             <p className="text-xl text-primary-foreground/80">
-              Join thousands of learners mastering English with expert-led courses
+              Tham gia cùng hàng ngàn học viên chinh phục tiếng Anh với các khóa học chất lượng
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-6 pt-8">
             <div className="space-y-2">
               <div className="text-3xl font-bold text-secondary">50K+</div>
-              <div className="text-sm text-primary-foreground/70">Students</div>
+              <div className="text-sm text-primary-foreground/70">Học viên</div>
             </div>
             <div className="space-y-2">
               <div className="text-3xl font-bold text-secondary">200+</div>
-              <div className="text-sm text-primary-foreground/70">Courses</div>
+              <div className="text-sm text-primary-foreground/70">Khóa học</div>
             </div>
             <div className="space-y-2">
               <div className="text-3xl font-bold text-secondary">98%</div>
-              <div className="text-sm text-primary-foreground/70">Success</div>
+              <div className="text-sm text-primary-foreground/70">Tỷ lệ thành công</div>
             </div>
           </div>
         </div>
@@ -76,18 +76,18 @@ const Login = () => {
             <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center shadow-accent">
               <BookOpen className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent font-['Poppins']">
+            <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent font-['Be Vietnam Pro']">
               SkillBoost
             </span>
           </Link>
 
           {/* Form Header */}
           <div className="text-center space-y-2">
-            <h2 className="text-3xl font-bold font-['Poppins']">
-              {isLogin ? 'Welcome Back' : 'Create Account'}
+            <h2 className="text-3xl font-bold font-['Be Vietnam Pro']">
+              {isLogin ? 'Chào mừng trở lại' : 'Tạo tài khoản'}
             </h2>
             <p className="text-muted-foreground">
-              {isLogin ? 'Login to continue your learning journey' : 'Start your journey to English fluency'}
+              {isLogin ? 'Đăng nhập để tiếp tục lộ trình học' : 'Bắt đầu hành trình chinh phục tiếng Anh'}
             </p>
           </div>
 
@@ -96,7 +96,7 @@ const Login = () => {
             {!isLogin && (
               <div>
                 <label htmlFor="name" className="block text-sm font-medium mb-2">
-                  Full Name
+                  Họ và tên
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -107,7 +107,7 @@ const Login = () => {
                     required={!isLogin}
                     value={formData.name}
                     onChange={handleChange}
-                    placeholder="John Doe"
+                    placeholder="Nguyễn Văn A"
                     className="pl-10 h-12"
                   />
                 </div>
@@ -116,7 +116,7 @@ const Login = () => {
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium mb-2">
-                Email Address
+                Địa chỉ email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -127,7 +127,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="john@example.com"
+                  placeholder="ten@example.com"
                   className="pl-10 h-12"
                 />
               </div>
@@ -135,7 +135,7 @@ const Login = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium mb-2">
-                Password
+                Mật khẩu
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -157,17 +157,17 @@ const Login = () => {
                 <div className="flex items-center gap-2">
                   <Checkbox id="remember" />
                   <label htmlFor="remember" className="text-sm cursor-pointer">
-                    Remember me
+                    Ghi nhớ đăng nhập
                   </label>
                 </div>
                 <a href="#" className="text-sm text-primary hover:underline">
-                  Forgot password?
+                  Quên mật khẩu?
                 </a>
               </div>
             )}
 
             <Button type="submit" size="lg" className="w-full bg-gradient-primary shadow-accent text-lg h-12">
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLogin ? 'Đăng nhập' : 'Tạo tài khoản'}
             </Button>
           </form>
 
@@ -178,9 +178,9 @@ const Login = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="text-sm text-muted-foreground hover:text-primary"
             >
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              {isLogin ? "Chưa có tài khoản? " : "Đã có tài khoản? "}
               <span className="font-semibold text-primary">
-                {isLogin ? 'Sign Up' : 'Sign In'}
+                {isLogin ? 'Đăng ký' : 'Đăng nhập'}
               </span>
             </button>
           </div>
@@ -188,7 +188,7 @@ const Login = () => {
           {/* Back to Home */}
           <div className="text-center pt-4">
             <Link to="/" className="text-sm text-muted-foreground hover:text-primary">
-              ← Back to Home
+              ← Về trang chủ
             </Link>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, DollarSign, CreditCard, Calendar } from 'lucide-react';
-import { mockTransactions, mockUsers } from '@/data/admin-mock';
+import { mockTransactions, mockUsers } from '@/data/mock';
 import { Transaction } from '@/types/admin';
 import StatCard from '@/components/admin/StatCard';
 import ChartCard from '@/components/admin/ChartCard';

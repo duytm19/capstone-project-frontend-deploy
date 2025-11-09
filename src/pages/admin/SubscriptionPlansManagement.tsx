@@ -27,7 +27,7 @@ import {
   Calendar,
   Package
 } from 'lucide-react';
-import { mockSubscriptionPlans } from '@/data/admin-mock';
+import { mockSubscriptionPlans } from '@/data/mock';
 import { SubscriptionPlan } from '@/types/admin';
 import StatCard from '@/components/admin/StatCard';
 import FilterSection from '@/components/admin/FilterSection';

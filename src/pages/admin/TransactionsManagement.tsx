@@ -23,7 +23,7 @@ import {
   CreditCard,
   Wallet
 } from 'lucide-react';
-import { mockTransactions } from '@/data/admin-mock';
+import { mockTransactions } from '@/data/mock';
 import { Transaction } from '@/types/admin';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';

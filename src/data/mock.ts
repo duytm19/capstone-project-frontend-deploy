@@ -1,11 +1,11 @@
 // Massive Static Mock Data for Admin Dashboard
-import { 
-  User, 
-  Course, 
-  Transaction, 
+import {
+  User,
+  Course,
+  Transaction,
   TopupOrder,
-  CourseSellerApplication, 
-  Report, 
+  CourseSellerApplication,
+  Report,
   SubscriptionPlan,
   SubscriptionContract,
   DashboardStats,
@@ -18,7 +18,8 @@ import {
   Rating,
   PracticeSession,
   Test,
-  EnglishTestType
+  EnglishTestType,
+  UserActivity
 } from '../types/admin';
 
 // Mock NotificationTypes
@@ -3439,4 +3440,796 @@ export const mockRevenueByCategory: ChartData[] = [
   { name: 'Technical English', value: 156000000 },
   { name: 'Conversation', value: 134000000 },
   { name: 'Grammar', value: 98000000 }
+];
+
+// ============================================================================
+// MOCK DATA FOR ADDITIONAL MODELS
+// ============================================================================
+
+// Mock Tags for Flashcards
+export interface Tag {
+  id: string;
+  name: string;
+}
+
+export const mockTags: Tag[] = [
+  { id: 'tag1', name: 'Business Vocabulary' },
+  { id: 'tag2', name: 'IELTS Vocabulary' },
+  { id: 'tag3', name: 'Medical Terms' },
+  { id: 'tag4', name: 'Legal Terms' },
+  { id: 'tag5', name: 'Academic Words' },
+  { id: 'tag6', name: 'Idioms' },
+  { id: 'tag7', name: 'Phrasal Verbs' },
+  { id: 'tag8', name: 'Grammar' },
+  { id: 'tag9', name: 'Pronunciation' },
+  { id: 'tag10', name: 'Common Mistakes' }
+];
+
+// Mock Flashcard Decks
+export interface FlashcardDeck {
+  id: string;
+  title: string;
+  createdAt: string;
+  description?: string;
+  isPublic: boolean;
+  userId: string;
+}
+
+export const mockFlashcardDecks: FlashcardDeck[] = [
+  {
+    id: 'deck1',
+    title: 'Essential Business English Vocabulary',
+    createdAt: '2024-01-15T10:00:00.000Z',
+    description: '500 essential business vocabulary words for professionals',
+    isPublic: true,
+    userId: '1'
+  },
+  {
+    id: 'deck2',
+    title: 'IELTS Academic Word List',
+    createdAt: '2024-02-20T14:30:00.000Z',
+    description: 'Academic vocabulary for IELTS preparation',
+    isPublic: true,
+    userId: '3'
+  },
+  {
+    id: 'deck3',
+    title: 'Medical English Terminology',
+    createdAt: '2024-03-10T09:15:00.000Z',
+    description: 'Essential medical terms for healthcare professionals',
+    isPublic: true,
+    userId: '5'
+  },
+  {
+    id: 'deck4',
+    title: 'Legal English Basics',
+    createdAt: '2024-04-05T11:20:00.000Z',
+    description: 'Fundamental legal terminology for lawyers',
+    isPublic: true,
+    userId: '1'
+  },
+  {
+    id: 'deck5',
+    title: 'Common English Idioms',
+    createdAt: '2024-05-12T16:45:00.000Z',
+    description: '200 most commonly used English idioms',
+    isPublic: true,
+    userId: '3'
+  }
+];
+
+// Mock Flashcards
+export interface Flashcard {
+  id: string;
+  frontContent: string;
+  backContent: string;
+  exampleSentence?: string;
+  audioUrl?: string;
+  deckId: string;
+}
+
+export const mockFlashcards: Flashcard[] = [
+  // Deck 1 - Business English
+  {
+    id: 'fc1',
+    frontContent: 'Revenue',
+    backContent: 'The total income generated from business operations',
+    exampleSentence: 'Our company\'s revenue increased by 25% this quarter.',
+    deckId: 'deck1'
+  },
+  {
+    id: 'fc2',
+    frontContent: 'Stakeholder',
+    backContent: 'A person or group with an interest in a business',
+    exampleSentence: 'We need to consult all stakeholders before making this decision.',
+    deckId: 'deck1'
+  },
+  {
+    id: 'fc3',
+    frontContent: 'Merger',
+    backContent: 'The combination of two companies into one',
+    exampleSentence: 'The merger between the two tech giants was announced yesterday.',
+    deckId: 'deck1'
+  },
+  // Deck 2 - IELTS
+  {
+    id: 'fc4',
+    frontContent: 'Ubiquitous',
+    backContent: 'Present, appearing, or found everywhere',
+    exampleSentence: 'Smartphones have become ubiquitous in modern society.',
+    deckId: 'deck2'
+  },
+  {
+    id: 'fc5',
+    frontContent: 'Comprehensive',
+    backContent: 'Complete and including everything that is necessary',
+    exampleSentence: 'The report provides a comprehensive analysis of the market.',
+    deckId: 'deck2'
+  },
+  // Deck 3 - Medical
+  {
+    id: 'fc6',
+    frontContent: 'Diagnosis',
+    backContent: 'The identification of a disease or condition',
+    exampleSentence: 'The doctor made a diagnosis after reviewing the test results.',
+    deckId: 'deck3'
+  },
+  {
+    id: 'fc7',
+    frontContent: 'Symptom',
+    backContent: 'A physical or mental feature indicating a condition',
+    exampleSentence: 'Fever is a common symptom of many infections.',
+    deckId: 'deck3'
+  },
+  // Deck 4 - Legal
+  {
+    id: 'fc8',
+    frontContent: 'Litigation',
+    backContent: 'The process of taking legal action',
+    exampleSentence: 'The company decided to pursue litigation against the competitor.',
+    deckId: 'deck4'
+  },
+  {
+    id: 'fc9',
+    frontContent: 'Jurisdiction',
+    backContent: 'The official power to make legal decisions',
+    exampleSentence: 'This case falls under federal jurisdiction.',
+    deckId: 'deck4'
+  },
+  // Deck 5 - Idioms
+  {
+    id: 'fc10',
+    frontContent: 'Break the ice',
+    backContent: 'To make people feel more comfortable in a social situation',
+    exampleSentence: 'He told a joke to break the ice at the beginning of the meeting.',
+    deckId: 'deck5'
+  }
+];
+
+// Mock Deck Tags (Many-to-Many relationship)
+export interface DeckTag {
+  tagId: string;
+  deckId: string;
+}
+
+export const mockDeckTags: DeckTag[] = [
+  { tagId: 'tag1', deckId: 'deck1' },
+  { tagId: 'tag2', deckId: 'deck2' },
+  { tagId: 'tag5', deckId: 'deck2' },
+  { tagId: 'tag3', deckId: 'deck3' },
+  { tagId: 'tag4', deckId: 'deck4' },
+  { tagId: 'tag6', deckId: 'deck5' }
+];
+
+// Mock User Flashcard Progress
+export interface UserFlashcardProgress {
+  userId: string;
+  flashcardId: string;
+  status: 'LEARNING' | 'REVIEW';
+  nextReviewAt: string;
+  repetitions: number;
+  learningStep: number;
+  easeFactor: number;
+  interval: number;
+}
+
+export const mockUserFlashcardProgress: UserFlashcardProgress[] = [
+  {
+    userId: '2',
+    flashcardId: 'fc1',
+    status: 'REVIEW',
+    nextReviewAt: '2024-11-10T10:00:00.000Z',
+    repetitions: 3,
+    learningStep: 2,
+    easeFactor: 2.5,
+    interval: 7
+  },
+  {
+    userId: '2',
+    flashcardId: 'fc2',
+    status: 'LEARNING',
+    nextReviewAt: '2024-11-09T10:00:00.000Z',
+    repetitions: 1,
+    learningStep: 0,
+    easeFactor: 2.5,
+    interval: 0
+  },
+  {
+    userId: '4',
+    flashcardId: 'fc4',
+    status: 'REVIEW',
+    nextReviewAt: '2024-11-12T14:00:00.000Z',
+    repetitions: 5,
+    learningStep: 3,
+    easeFactor: 2.6,
+    interval: 14
+  }
+];
+
+// Mock In-App Notifications
+export interface InAppNotification {
+  id: string;
+  userId: string;
+  title: string;
+  content: string;
+  type: string;
+  isRead: boolean;
+  isArchived: boolean;
+  createdAt: string;
+  readAt?: string;
+  archivedAt?: string;
+  contractId?: string;
+  courseId?: string;
+  metadata?: any;
+}
+
+export const mockInAppNotifications: InAppNotification[] = [
+  {
+    id: 'ian1',
+    userId: '1',
+    title: 'Subscription Renewal Reminder',
+    content: 'Your Professional Plan subscription will expire in 5 days. Please renew to continue.',
+    type: 'RENEWAL_REMINDER',
+    isRead: false,
+    isArchived: false,
+    createdAt: '2024-10-28T09:00:00.000Z',
+    contractId: 'sc1'
+  },
+  {
+    id: 'ian2',
+    userId: '3',
+    title: 'Course Approved',
+    content: 'Your course "IELTS 8.5+ Guarantee Course" has been approved and is now live!',
+    type: 'COURSE_APPROVED',
+    isRead: true,
+    isArchived: false,
+    createdAt: '2024-10-27T14:30:00.000Z',
+    readAt: '2024-10-27T15:00:00.000Z',
+    courseId: 'c2'
+  },
+  {
+    id: 'ian3',
+    userId: '5',
+    title: 'Subscription Expiring Soon',
+    content: 'Your subscription will expire tomorrow. Renew now to avoid service interruption.',
+    type: 'EXPIRATION_WARNING',
+    isRead: false,
+    isArchived: false,
+    createdAt: '2024-10-29T08:00:00.000Z',
+    contractId: 'sc3'
+  }
+];
+
+// Mock Score Conversions
+export interface ScoreConversion {
+  id: string;
+  englishTestTypeId: string;
+  skill: 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
+  rawScore: number;
+  scaledScore: number;
+}
+
+export const mockScoreConversions: ScoreConversion[] = [
+  // IELTS Reading
+  { id: 'sc1', englishTestTypeId: 'ett1', skill: 'READING', rawScore: 39, scaledScore: 9.0 },
+  { id: 'sc2', englishTestTypeId: 'ett1', skill: 'READING', rawScore: 37, scaledScore: 8.5 },
+  { id: 'sc3', englishTestTypeId: 'ett1', skill: 'READING', rawScore: 35, scaledScore: 8.0 },
+  { id: 'sc4', englishTestTypeId: 'ett1', skill: 'READING', rawScore: 33, scaledScore: 7.5 },
+  { id: 'sc5', englishTestTypeId: 'ett1', skill: 'READING', rawScore: 30, scaledScore: 7.0 },
+  // IELTS Listening
+  { id: 'sc6', englishTestTypeId: 'ett1', skill: 'LISTENING', rawScore: 39, scaledScore: 9.0 },
+  { id: 'sc7', englishTestTypeId: 'ett1', skill: 'LISTENING', rawScore: 37, scaledScore: 8.5 },
+  { id: 'sc8', englishTestTypeId: 'ett1', skill: 'LISTENING', rawScore: 35, scaledScore: 8.0 },
+  { id: 'sc9', englishTestTypeId: 'ett1', skill: 'LISTENING', rawScore: 32, scaledScore: 7.5 },
+  { id: 'sc10', englishTestTypeId: 'ett1', skill: 'LISTENING', rawScore: 30, scaledScore: 7.0 },
+  // TOEFL Reading
+  { id: 'sc11', englishTestTypeId: 'ett2', skill: 'READING', rawScore: 30, scaledScore: 30 },
+  { id: 'sc12', englishTestTypeId: 'ett2', skill: 'READING', rawScore: 28, scaledScore: 28 },
+  { id: 'sc13', englishTestTypeId: 'ett2', skill: 'READING', rawScore: 25, scaledScore: 25 },
+  // TOEFL Listening
+  { id: 'sc14', englishTestTypeId: 'ett2', skill: 'LISTENING', rawScore: 30, scaledScore: 30 },
+  { id: 'sc15', englishTestTypeId: 'ett2', skill: 'LISTENING', rawScore: 28, scaledScore: 28 },
+  { id: 'sc16', englishTestTypeId: 'ett2', skill: 'LISTENING', rawScore: 25, scaledScore: 25 }
+];
+
+// Mock Lessons
+export interface Lesson {
+  id: string;
+  title: string;
+  description?: string;
+  durationInSeconds?: number;
+  videoUrl?: string;
+  lessonOrder?: number;
+  materials: string[];
+  commentCount?: number;
+  courseId: string;
+}
+
+export const mockLessons: Lesson[] = [
+  {
+    id: 'lesson1',
+    title: 'Introduction to Business English',
+    description: 'Learn the fundamentals of business communication',
+    durationInSeconds: 1800,
+    videoUrl: 'https://example.com/videos/lesson1.mp4',
+    lessonOrder: 1,
+    materials: ['slides.pdf', 'worksheet.pdf'],
+    commentCount: 15,
+    courseId: 'c1'
+  },
+  {
+    id: 'lesson2',
+    title: 'Email Writing Basics',
+    description: 'Master professional email communication',
+    durationInSeconds: 2400,
+    videoUrl: 'https://example.com/videos/lesson2.mp4',
+    lessonOrder: 2,
+    materials: ['email_templates.pdf', 'practice_exercises.pdf'],
+    commentCount: 23,
+    courseId: 'c1'
+  },
+  {
+    id: 'lesson3',
+    title: 'IELTS Reading Strategies',
+    description: 'Effective strategies for IELTS reading section',
+    durationInSeconds: 3000,
+    videoUrl: 'https://example.com/videos/lesson3.mp4',
+    lessonOrder: 1,
+    materials: ['reading_practice.pdf', 'strategy_guide.pdf'],
+    commentCount: 42,
+    courseId: 'c2'
+  },
+  {
+    id: 'lesson4',
+    title: 'IELTS Listening Techniques',
+    description: 'Improve your listening comprehension',
+    durationInSeconds: 2700,
+    videoUrl: 'https://example.com/videos/lesson4.mp4',
+    lessonOrder: 2,
+    materials: ['listening_exercises.pdf'],
+    commentCount: 38,
+    courseId: 'c2'
+  },
+  {
+    id: 'lesson5',
+    title: 'Medical Terminology Overview',
+    description: 'Essential medical vocabulary for healthcare professionals',
+    durationInSeconds: 2100,
+    videoUrl: 'https://example.com/videos/lesson5.mp4',
+    lessonOrder: 1,
+    materials: ['medical_glossary.pdf', 'anatomy_diagrams.pdf'],
+    commentCount: 19,
+    courseId: 'c3'
+  }
+];
+
+// Mock Media Assets
+export interface MediaAsset {
+  id: string;
+  assetType: 'AUDIO' | 'IMAGE' | 'VIDEO';
+  assetUrl: string;
+  description?: string;
+  lessonId: string;
+}
+
+export const mockMediaAssets: MediaAsset[] = [
+  {
+    id: 'media1',
+    assetType: 'VIDEO',
+    assetUrl: 'https://example.com/videos/intro.mp4',
+    description: 'Introduction video',
+    lessonId: 'lesson1'
+  },
+  {
+    id: 'media2',
+    assetType: 'IMAGE',
+    assetUrl: 'https://example.com/images/diagram1.jpg',
+    description: 'Business communication diagram',
+    lessonId: 'lesson1'
+  },
+  {
+    id: 'media3',
+    assetType: 'AUDIO',
+    assetUrl: 'https://example.com/audio/listening1.mp3',
+    description: 'IELTS listening practice audio',
+    lessonId: 'lesson4'
+  },
+  {
+    id: 'media4',
+    assetType: 'IMAGE',
+    assetUrl: 'https://example.com/images/anatomy.jpg',
+    description: 'Human anatomy diagram',
+    lessonId: 'lesson5'
+  }
+];
+
+// Mock Sections (for Tests)
+export interface Section {
+  id: string;
+  title: string;
+  testId?: string;
+  skill: 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
+  durationInSeconds?: number;
+  totalQuestions?: number;
+  totalScore?: number;
+}
+
+export const mockSections: Section[] = [
+  {
+    id: 'section1',
+    title: 'Reading Section 1',
+    testId: 'test1',
+    skill: 'READING',
+    durationInSeconds: 1200,
+    totalQuestions: 13,
+    totalScore: 13
+  },
+  {
+    id: 'section2',
+    title: 'Reading Section 2',
+    testId: 'test1',
+    skill: 'READING',
+    durationInSeconds: 1200,
+    totalQuestions: 13,
+    totalScore: 13
+  },
+  {
+    id: 'section3',
+    title: 'Listening Section 1',
+    testId: 'test1',
+    skill: 'LISTENING',
+    durationInSeconds: 600,
+    totalQuestions: 10,
+    totalScore: 10
+  },
+  {
+    id: 'section4',
+    title: 'TOEFL Reading',
+    testId: 'test2',
+    skill: 'READING',
+    durationInSeconds: 3600,
+    totalQuestions: 30,
+    totalScore: 30
+  },
+  {
+    id: 'section5',
+    title: 'TOEFL Listening',
+    testId: 'test2',
+    skill: 'LISTENING',
+    durationInSeconds: 2400,
+    totalQuestions: 28,
+    totalScore: 28
+  }
+];
+
+// Mock Test Skills (Many-to-Many)
+export interface TestSkill {
+  testId: string;
+  skill: 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
+}
+
+export const mockTestSkills: TestSkill[] = [
+  { testId: 'test1', skill: 'READING' },
+  { testId: 'test1', skill: 'LISTENING' },
+  { testId: 'test1', skill: 'WRITING' },
+  { testId: 'test1', skill: 'SPEAKING' },
+  { testId: 'test2', skill: 'READING' },
+  { testId: 'test2', skill: 'LISTENING' },
+  { testId: 'test2', skill: 'WRITING' },
+  { testId: 'test2', skill: 'SPEAKING' }
+];
+
+// Mock Passages
+export interface Passage {
+  id: string;
+  sectionId: string;
+  content: string;
+  passageOrder?: number;
+}
+
+export const mockPassages: Passage[] = [
+  {
+    id: 'passage1',
+    sectionId: 'section1',
+    content: 'The Industrial Revolution marked a major turning point in history. Almost every aspect of daily life was influenced in some way. In particular, average income and population began to exhibit unprecedented sustained growth...',
+    passageOrder: 1
+  },
+  {
+    id: 'passage2',
+    sectionId: 'section2',
+    content: 'Climate change is one of the most pressing issues facing humanity today. The scientific consensus is clear: human activities, particularly the emission of greenhouse gases, are the primary drivers of global warming...',
+    passageOrder: 1
+  },
+  {
+    id: 'passage3',
+    sectionId: 'section4',
+    content: 'Artificial intelligence has transformed numerous industries in recent years. From healthcare to finance, AI systems are being deployed to solve complex problems and automate routine tasks...',
+    passageOrder: 1
+  }
+];
+
+// Mock Questions
+export interface Question {
+  id: string;
+  sectionId: string;
+  questionText?: string;
+  imageUrl?: string;
+  questionType: 'MULTIPLE_CHOICE' | 'ESSAY' | 'FILL_IN_THE_BLANK';
+  options: string[];
+  correctAnswerIndex?: number;
+  wordLimit?: number;
+  correctAnswer?: string;
+  passageId: string;
+  mediaId: string;
+}
+
+export const mockQuestions: Question[] = [
+  {
+    id: 'q1',
+    sectionId: 'section1',
+    questionText: 'What was the main impact of the Industrial Revolution?',
+    questionType: 'MULTIPLE_CHOICE',
+    options: [
+      'Decreased population',
+      'Increased income and population growth',
+      'Reduced technology',
+      'Lower living standards'
+    ],
+    correctAnswerIndex: 1,
+    passageId: 'passage1',
+    mediaId: 'media1'
+  },
+  {
+    id: 'q2',
+    sectionId: 'section2',
+    questionText: 'According to the passage, what is the primary driver of global warming?',
+    questionType: 'MULTIPLE_CHOICE',
+    options: [
+      'Natural climate cycles',
+      'Solar radiation',
+      'Human greenhouse gas emissions',
+      'Volcanic activity'
+    ],
+    correctAnswerIndex: 2,
+    passageId: 'passage2',
+    mediaId: 'media2'
+  },
+  {
+    id: 'q3',
+    sectionId: 'section1',
+    questionText: 'The Industrial Revolution caused unprecedented _____ in average income.',
+    questionType: 'FILL_IN_THE_BLANK',
+    options: [],
+    correctAnswer: 'growth',
+    passageId: 'passage1',
+    mediaId: 'media1'
+  },
+  {
+    id: 'q4',
+    sectionId: 'section4',
+    questionText: 'Write an essay discussing the impact of AI on modern society. (250 words minimum)',
+    questionType: 'ESSAY',
+    options: [],
+    wordLimit: 250,
+    passageId: 'passage3',
+    mediaId: 'media3'
+  }
+];
+
+// Mock User Lessons (Many-to-Many)
+export interface UserLesson {
+  lessonId: string;
+  userId: string;
+}
+
+export const mockUserLessons: UserLesson[] = [
+  { lessonId: 'lesson1', userId: '2' },
+  { lessonId: 'lesson1', userId: '4' },
+  { lessonId: 'lesson2', userId: '2' },
+  { lessonId: 'lesson3', userId: '4' },
+  { lessonId: 'lesson3', userId: '6' },
+  { lessonId: 'lesson4', userId: '4' },
+  { lessonId: 'lesson5', userId: '6' }
+];
+
+// Mock User Answers
+export interface UserAnswer {
+  id: string;
+  practiceSessionId: string;
+  questionId: string;
+  userId: string;
+  answerText?: string;
+  selectedOptionIndex?: number;
+  isCorrect?: boolean;
+}
+
+export const mockUserAnswers: UserAnswer[] = [
+  {
+    id: 'ua1',
+    practiceSessionId: 'ps1',
+    questionId: 'q1',
+    userId: '2',
+    selectedOptionIndex: 1,
+    isCorrect: true
+  },
+  {
+    id: 'ua2',
+    practiceSessionId: 'ps1',
+    questionId: 'q2',
+    userId: '2',
+    selectedOptionIndex: 2,
+    isCorrect: true
+  },
+  {
+    id: 'ua3',
+    practiceSessionId: 'ps1',
+    questionId: 'q3',
+    userId: '2',
+    answerText: 'growth',
+    isCorrect: true
+  },
+  {
+    id: 'ua4',
+    practiceSessionId: 'ps2',
+    questionId: 'q4',
+    userId: '4',
+    answerText: 'Artificial intelligence has had a profound impact on modern society...',
+    isCorrect: null
+  }
+];
+
+// Mock User Activities
+export const mockUserActivities: UserActivity[] = [
+  {
+    id: 'activity1',
+    userId: '2',
+    transactionId: 't1',
+    courseId: 'c1',
+    createdAt: '2024-10-25T15:30:00.000Z',
+    expiresAt: '2025-10-25T15:30:00.000Z',
+    user: mockUsers[1],
+    transaction: mockTransactions[0]
+  },
+  {
+    id: 'activity2',
+    userId: '4',
+    transactionId: 't2',
+    courseId: 'c2',
+    createdAt: '2024-10-24T14:20:00.000Z',
+    expiresAt: '2025-10-24T14:20:00.000Z',
+    user: mockUsers[3],
+    transaction: mockTransactions[1]
+  },
+  {
+    id: 'activity3',
+    userId: '6',
+    transactionId: 't3',
+    courseId: 'c3',
+    createdAt: '2024-10-23T11:15:00.000Z',
+    expiresAt: '2025-10-23T11:15:00.000Z',
+    user: mockUsers[5],
+    transaction: mockTransactions[2]
+  }
+];
+
+// Mock Comments
+export interface Comment {
+  id: string;
+  content: string;
+  userId: string;
+  createdAt: string;
+  parentCommentId?: string;
+  lessonId: string;
+}
+
+export const mockComments: Comment[] = [
+  {
+    id: 'comment1',
+    content: 'Great lesson! Very clear explanation.',
+    userId: '2',
+    createdAt: '2024-10-26T10:30:00.000Z',
+    lessonId: 'lesson1'
+  },
+  {
+    id: 'comment2',
+    content: 'Could you provide more examples?',
+    userId: '4',
+    createdAt: '2024-10-26T14:45:00.000Z',
+    lessonId: 'lesson1'
+  },
+  {
+    id: 'comment3',
+    content: 'Sure! I will add more examples in the next update.',
+    userId: '1',
+    createdAt: '2024-10-26T15:00:00.000Z',
+    parentCommentId: 'comment2',
+    lessonId: 'lesson1'
+  },
+  {
+    id: 'comment4',
+    content: 'The listening exercises are very helpful!',
+    userId: '4',
+    createdAt: '2024-10-27T09:15:00.000Z',
+    lessonId: 'lesson4'
+  },
+  {
+    id: 'comment5',
+    content: 'Thank you for this comprehensive course!',
+    userId: '6',
+    createdAt: '2024-10-27T16:20:00.000Z',
+    lessonId: 'lesson5'
+  }
+];
+
+// Mock Policies
+export interface Policy {
+  id: string;
+  content: string;
+  createdAt: string;
+  userId: string;
+}
+
+export const mockPolicies: Policy[] = [
+  {
+    id: 'policy1',
+    content: 'All course content must be original and not infringe on any copyrights. Instructors are responsible for ensuring they have the rights to all materials used in their courses.',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    userId: 'admin1'
+  },
+  {
+    id: 'policy2',
+    content: 'Course sellers must respond to student questions within 48 hours. Failure to maintain responsiveness may result in course suspension.',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    userId: 'admin1'
+  },
+  {
+    id: 'policy3',
+    content: 'Subscription payments must be made on time to maintain active course listings. Late payments will result in automatic course deactivation.',
+    createdAt: '2024-01-01T00:00:00.000Z',
+    userId: 'admin1'
+  }
+];
+
+// Mock User Notifications (Many-to-Many)
+export interface UserNotification {
+  notificationId: string;
+  userId: string;
+}
+
+export const mockUserNotifications: UserNotification[] = [
+  { notificationId: 'n1', userId: '1' },
+  { notificationId: 'n2', userId: '2' },
+  { notificationId: 'n3', userId: '1' },
+  { notificationId: 'n3', userId: '3' },
+  { notificationId: 'n3', userId: '5' },
+  { notificationId: 'n4', userId: '18' },
+  { notificationId: 'n5', userId: '5' },
+  { notificationId: 'n6', userId: '3' },
+  { notificationId: 'n7', userId: '17' },
+  { notificationId: 'n8', userId: '7' },
+  { notificationId: 'n17', userId: '1' },
+  { notificationId: 'n17', userId: '2' },
+  { notificationId: 'n17', userId: '3' },
+  { notificationId: 'n17', userId: '4' },
+  { notificationId: 'n17', userId: '5' }
 ];

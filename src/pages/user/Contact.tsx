@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import Navbar from '@/components/user/layout/Navbar';
+import Footer from '@/components/user/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,8 +19,8 @@ const Contact = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Message sent!",
-      description: "We'll get back to you as soon as possible.",
+      title: "Đã gửi tin nhắn!",
+      description: "Chúng tôi sẽ phản hồi bạn sớm nhất có thể.",
     });
     setFormData({ name: '', email: '', subject: '', message: '' });
   };
@@ -35,19 +35,19 @@ const Contact = () => {
   const contactInfo = [
     {
       icon: Mail,
-      title: 'Email Us',
+      title: 'Email',
       content: 'support@skillboost.com',
       link: 'mailto:support@skillboost.com',
     },
     {
       icon: Phone,
-      title: 'Call Us',
+      title: 'Gọi cho chúng tôi',
       content: '+1 (555) 123-4567',
       link: 'tel:+15551234567',
     },
     {
       icon: MapPin,
-      title: 'Visit Us',
+      title: 'Địa chỉ',
       content: '123 Learning Street, Education City, EC 12345',
       link: '#',
     },
@@ -62,11 +62,11 @@ const Contact = () => {
         <section className="bg-gradient-hero text-primary-foreground py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Poppins']">
-                Get In Touch
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Be Vietnam Pro']">
+                Liên hệ với chúng tôi
               </h1>
               <p className="text-xl text-primary-foreground/80">
-                Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+                Bạn có câu hỏi? Hãy gửi tin nhắn cho chúng tôi và chúng tôi sẽ phản hồi trong thời gian sớm nhất.
               </p>
             </div>
           </div>
@@ -87,7 +87,7 @@ const Contact = () => {
                     <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-md">
                       <info.icon className="w-6 h-6 text-primary-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2 font-['Poppins']">{info.title}</h3>
+                    <h3 className="text-lg font-semibold mb-2 font-['Be Vietnam Pro']">{info.title}</h3>
                     <p className="text-muted-foreground">{info.content}</p>
                   </a>
                 ))}
@@ -96,13 +96,13 @@ const Contact = () => {
               {/* Contact Form */}
               <div className="lg:col-span-2">
                 <div className="bg-card rounded-2xl p-8 shadow-sm border border-border">
-                  <h2 className="text-3xl font-bold mb-6 font-['Poppins']">Send us a Message</h2>
+                  <h2 className="text-3xl font-bold mb-6 font-['Be Vietnam Pro']">Gửi tin nhắn cho chúng tôi</h2>
                   
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium mb-2">
-                          Your Name
+                          Họ và tên
                         </label>
                         <Input
                           id="name"
@@ -111,13 +111,13 @@ const Contact = () => {
                           required
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder="John Doe"
+                          placeholder="Nguyễn Văn A"
                           className="h-12"
                         />
                       </div>
                       <div>
                         <label htmlFor="email" className="block text-sm font-medium mb-2">
-                          Email Address
+                          Địa chỉ email
                         </label>
                         <Input
                           id="email"
@@ -126,7 +126,7 @@ const Contact = () => {
                           required
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder="john@example.com"
+                          placeholder="ten@example.com"
                           className="h-12"
                         />
                       </div>
@@ -134,7 +134,7 @@ const Contact = () => {
 
                     <div>
                       <label htmlFor="subject" className="block text-sm font-medium mb-2">
-                        Subject
+                        Chủ đề
                       </label>
                       <Input
                         id="subject"
@@ -143,14 +143,14 @@ const Contact = () => {
                         required
                         value={formData.subject}
                         onChange={handleChange}
-                        placeholder="How can we help?"
+                        placeholder="Chúng tôi có thể giúp gì cho bạn?"
                         className="h-12"
                       />
                     </div>
 
                     <div>
                       <label htmlFor="message" className="block text-sm font-medium mb-2">
-                        Message
+                        Nội dung
                       </label>
                       <Textarea
                         id="message"
@@ -158,7 +158,7 @@ const Contact = () => {
                         required
                         value={formData.message}
                         onChange={handleChange}
-                        placeholder="Tell us more about your inquiry..."
+                        placeholder="Hãy mô tả chi tiết về yêu cầu của bạn..."
                         rows={6}
                         className="resize-none"
                       />
@@ -166,7 +166,7 @@ const Contact = () => {
 
                     <Button type="submit" size="lg" className="w-full bg-gradient-primary shadow-accent">
                       <Send className="w-5 h-5 mr-2" />
-                      Send Message
+                      Gửi tin nhắn
                     </Button>
                   </form>
                 </div>
@@ -183,7 +183,7 @@ const Contact = () => {
                 <div className="w-full h-full bg-muted flex items-center justify-center">
                   <div className="text-center">
                     <MapPin className="w-16 h-16 text-primary mx-auto mb-4" />
-                    <p className="text-lg text-muted-foreground">Map Location</p>
+                    <p className="text-lg text-muted-foreground">Vị trí bản đồ</p>
                     <p className="text-sm text-muted-foreground">123 Learning Street, Education City</p>
                   </div>
                 </div>

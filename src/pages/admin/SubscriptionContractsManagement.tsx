@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import StatCard from '@/components/admin/StatCard';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
-import { mockSubscriptionContracts, mockSubscriptionPlans, mockUsers } from '@/data/admin-mock';
+import { mockSubscriptionContracts, mockSubscriptionPlans, mockUsers } from '@/data/mock';
 import { SubscriptionContract, SubscriptionPlan, User } from '@/types/admin';
 
 interface ContractFormData {

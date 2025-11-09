@@ -29,7 +29,7 @@ import {
   UserCheck,
   UserCog
 } from 'lucide-react';
-import { mockNotifications, mockUsers, mockNotificationTypes } from '@/data/admin-mock';
+import { mockNotifications, mockUsers, mockNotificationTypes } from '@/data/mock';
 import { Notification, NotificationType, User } from '@/types/admin';
 import StatCard from '@/components/admin/StatCard';
 import FilterSection from '@/components/admin/FilterSection';

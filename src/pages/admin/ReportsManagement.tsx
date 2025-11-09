@@ -27,7 +27,7 @@ import {
   User,
   FileText
 } from 'lucide-react';
-import { mockReports } from '@/data/admin-mock';
+import { mockReports } from '@/data/mock';
 import { Report } from '@/types/admin';
 import StatCard from '@/components/admin/StatCard';
 import FilterSection from '@/components/admin/FilterSection';

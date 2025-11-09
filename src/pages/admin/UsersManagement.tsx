@@ -41,7 +41,7 @@ import {
   Save,
   X as XIcon
 } from 'lucide-react';
-import { mockUsers } from '@/data/admin-mock';
+import { mockUsers } from '@/data/mock';
 import { User } from '@/types/admin';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';

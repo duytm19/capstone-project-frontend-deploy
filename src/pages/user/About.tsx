@@ -1,59 +1,59 @@
-import Navbar from '@/components/layout/Navbar';
-import Footer from '@/components/layout/Footer';
+import Navbar from '@/components/user/layout/Navbar';
+import Footer from '@/components/user/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Target, Users, Award, Heart, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const About = () => {
   const stats = [
-    { value: '50,000+', label: 'Active Students' },
-    { value: '200+', label: 'Expert Courses' },
-    { value: '98%', label: 'Success Rate' },
-    { value: '50+', label: 'Countries' },
+    { value: '50,000+', label: 'Học viên đang hoạt động' },
+    { value: '200+', label: 'Khoá học chuyên sâu' },
+    { value: '98%', label: 'Tỷ lệ thành công' },
+    { value: '50+', label: 'Quốc gia' },
   ];
 
   const values = [
     {
       icon: Target,
-      title: 'Our Mission',
-      description: 'To make quality English education accessible to everyone, everywhere, and empower learners to achieve their goals.',
+      title: 'Sứ mệnh của chúng tôi',
+      description: 'Mang giáo dục tiếng Anh chất lượng đến với mọi người, mọi nơi và trao quyền cho người học đạt được mục tiêu.',
     },
     {
       icon: Users,
-      title: 'Expert Team',
-      description: 'Our instructors are certified professionals with years of experience and passion for teaching.',
+      title: 'Đội ngũ chuyên gia',
+      description: 'Giảng viên là các chuyên gia được chứng nhận, giàu kinh nghiệm và đam mê giảng dạy.',
     },
     {
       icon: Award,
-      title: 'Quality First',
-      description: 'We maintain the highest standards in course content, delivery, and student support.',
+      title: 'Chất lượng là trên hết',
+      description: 'Duy trì tiêu chuẩn cao nhất trong nội dung khóa học, cách triển khai và hỗ trợ học viên.',
     },
     {
       icon: Heart,
-      title: 'Student Success',
-      description: 'Your success is our priority. We provide comprehensive support throughout your learning journey.',
+      title: 'Thành công của học viên',
+      description: 'Sự thành công của bạn là ưu tiên của chúng tôi. Luôn đồng hành và hỗ trợ trong suốt hành trình học tập.',
     },
   ];
 
   const team = [
     {
       name: 'Dr. Sarah Johnson',
-      role: 'Lead Instructor',
+      role: 'Giảng viên trưởng',
       image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop',
     },
     {
       name: 'Michael Chen',
-      role: 'Business English Expert',
+      role: 'Chuyên gia tiếng Anh thương mại',
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
     },
     {
       name: 'Emma Williams',
-      role: 'IELTS Specialist',
+      role: 'Chuyên gia IELTS',
       image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop',
     },
     {
       name: 'David Martinez',
-      role: 'Speaking Coach',
+      role: 'Huấn luyện viên Speaking',
       image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop',
     },
   ];
@@ -67,11 +67,11 @@ const About = () => {
         <section className="bg-gradient-hero text-primary-foreground py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto text-center">
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Poppins']">
-                About SkillBoost
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 font-['Be Vietnam Pro']">
+                Về SkillBoost
               </h1>
               <p className="text-xl text-primary-foreground/80">
-                Empowering learners worldwide to master English and achieve their dreams
+                Trao quyền cho người học trên toàn thế giới để làm chủ tiếng Anh và đạt được ước mơ
               </p>
             </div>
           </div>
@@ -98,29 +98,28 @@ const About = () => {
           <div className="container mx-auto px-4">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-4xl font-bold mb-6 font-['Poppins']">Our Story</h2>
+                <h2 className="text-4xl font-bold mb-6 font-['Be Vietnam Pro']">Câu chuyện của chúng tôi</h2>
                 <div className="space-y-4 text-muted-foreground leading-relaxed">
                   <p>
-                    Founded in 2020, SkillBoost was born from a simple yet powerful vision: 
-                    to make high-quality English education accessible to everyone, regardless 
-                    of their location or background.
+                    Được thành lập năm 2020, SkillBoost ra đời từ một tầm nhìn đơn giản nhưng mạnh mẽ: 
+                    mang giáo dục tiếng Anh chất lượng cao đến với mọi người, bất kể địa điểm hay hoàn cảnh.
                   </p>
                   <p>
-                    What started as a small team of passionate educators has grown into a 
-                    global platform serving thousands of students across 50+ countries. Our 
-                    commitment to excellence and student success has remained unchanged.
+                    Bắt đầu từ một đội ngũ nhỏ đầy nhiệt huyết, chúng tôi đã phát triển thành nền tảng 
+                    toàn cầu phục vụ hàng nghìn học viên tại hơn 50 quốc gia. Cam kết về chất lượng và 
+                    thành công của học viên luôn được giữ vững.
                   </p>
                   <p>
-                    Today, we continue to innovate and improve our courses, ensuring that 
-                    every student receives the best possible learning experience. Join us 
-                    on this journey to English fluency.
+                    Ngày nay, chúng tôi tiếp tục đổi mới và cải tiến khóa học để 
+                    đảm bảo mỗi học viên nhận được trải nghiệm học tập tốt nhất. Hãy cùng chúng tôi 
+                    trên hành trình chinh phục tiếng Anh.
                   </p>
                 </div>
               </div>
               <div className="relative">
                 <img
                   src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&h=600&fit=crop"
-                  alt="Our story"
+                  alt="Câu chuyện của chúng tôi"
                   className="rounded-2xl shadow-lg"
                 />
                 <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-secondary/20 rounded-full blur-3xl" />
@@ -134,11 +133,11 @@ const About = () => {
         <section className="py-20 bg-muted">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Poppins']">
-                Our Core Values
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Be Vietnam Pro']">
+                Giá trị cốt lõi
               </h2>
               <p className="text-lg text-muted-foreground">
-                The principles that guide everything we do
+                Những nguyên tắc định hướng mọi hoạt động của chúng tôi
               </p>
             </div>
 
@@ -151,7 +150,7 @@ const About = () => {
                   <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-6 shadow-md">
                     <value.icon className="w-7 h-7 text-primary-foreground" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 font-['Poppins']">{value.title}</h3>
+                  <h3 className="text-xl font-semibold mb-3 font-['Be Vietnam Pro']">{value.title}</h3>
                   <p className="text-muted-foreground leading-relaxed">{value.description}</p>
                 </div>
               ))}
@@ -163,11 +162,11 @@ const About = () => {
         <section className="py-20">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Poppins']">
-                Meet Our Instructors
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 font-['Be Vietnam Pro']">
+                Đội ngũ giảng viên
               </h2>
               <p className="text-lg text-muted-foreground">
-                Learn from experienced professionals dedicated to your success
+                Học với các chuyên gia giàu kinh nghiệm, tận tâm với thành công của bạn
               </p>
             </div>
 
@@ -185,7 +184,7 @@ const About = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-1 font-['Poppins']">{member.name}</h3>
+                  <h3 className="text-xl font-semibold mb-1 font-['Be Vietnam Pro']">{member.name}</h3>
                   <p className="text-muted-foreground">{member.role}</p>
                 </div>
               ))}
@@ -197,15 +196,15 @@ const About = () => {
         <section className="py-20 bg-gradient-primary">
           <div className="container mx-auto px-4 text-center">
             <div className="max-w-3xl mx-auto space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground font-['Poppins']">
-                Join Our Growing Community
+              <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground font-['Be Vietnam Pro']">
+                Tham gia cộng đồng đang phát triển của chúng tôi
               </h2>
               <p className="text-xl text-primary-foreground/80">
-                Start your journey to English fluency with expert guidance and support
+                Bắt đầu hành trình chinh phục tiếng Anh với sự đồng hành và hỗ trợ từ các chuyên gia
               </p>
               <Link to="/courses">
                 <Button size="lg" variant="secondary" className="shadow-accent text-lg h-14 px-8">
-                  Explore Courses
+                  Khám phá khóa học
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
