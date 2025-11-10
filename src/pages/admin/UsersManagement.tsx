@@ -42,7 +42,7 @@ import {
   X as XIcon
 } from 'lucide-react';
 import { mockUsers } from '@/data/mock';
-import { User } from '@/types/admin';
+import { User } from '@/types/type';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
 import StatCard from '@/components/admin/StatCard';

@@ -28,7 +28,7 @@ import {
   Package
 } from 'lucide-react';
 import { mockSubscriptionPlans } from '@/data/mock';
-import { SubscriptionPlan } from '@/types/admin';
+import { SubscriptionPlan } from '@/types/type';
 import StatCard from '@/components/admin/StatCard';
 import FilterSection from '@/components/admin/FilterSection';
 import DataTable from '@/components/admin/DataTable';

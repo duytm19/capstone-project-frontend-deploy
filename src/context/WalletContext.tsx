@@ -6,6 +6,7 @@ type PaymentMethod = 'MOMO' | 'ZALOPAY' | 'BANKING' | 'APPLEPAY';
 interface WalletContextValue {
   balance: number;
   deposit: (amount: number, method: PaymentMethod, currency?: string) => void;
+  pay: (amount: number) => boolean;
   clear: () => void;
 }
 
@@ -35,9 +36,16 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     setBalance(prev => prev + amount);
   };
 
+  const pay = (amount: number) => {
+    if (!amount || amount <= 0) return false;
+    if (balance < amount) return false;
+    setBalance(prev => prev - amount);
+    return true;
+  };
+
   const clear = () => setBalance(0);
 
-  const value: WalletContextValue = { balance, deposit, clear };
+  const value: WalletContextValue = { balance, deposit, pay, clear };
 
   return (
     <WalletContext.Provider value={value}>{children}</WalletContext.Provider>

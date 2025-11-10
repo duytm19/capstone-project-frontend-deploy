@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Course as AdminCourse } from '@/types/admin';
+import { Course as AdminCourse } from '@/types/type';
 import { formatVND } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';

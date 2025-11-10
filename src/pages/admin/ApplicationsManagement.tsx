@@ -33,7 +33,7 @@ import {
   User
 } from 'lucide-react';
 import { mockCourseSellerApplications } from '@/data/mock';
-import { CourseSellerApplication } from '@/types/admin';
+import { CourseSellerApplication } from '@/types/type';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
 

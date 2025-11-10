@@ -24,7 +24,7 @@ import {
   Star
 } from 'lucide-react';
 import { mockCourses } from '@/data/mock';
-import { Course } from '@/types/admin';
+import { Course } from '@/types/type';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
 

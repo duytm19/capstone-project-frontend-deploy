@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp, DollarSign, CreditCard, Calendar } from 'lucide-react';
 import { mockTransactions, mockUsers } from '@/data/mock';
-import { Transaction } from '@/types/admin';
+import { Transaction } from '@/types/type';
 import StatCard from '@/components/admin/StatCard';
 import ChartCard from '@/components/admin/ChartCard';
 import FilterSection from '@/components/admin/FilterSection';

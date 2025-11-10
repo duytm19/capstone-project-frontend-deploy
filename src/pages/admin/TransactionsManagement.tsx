@@ -24,7 +24,7 @@ import {
   Wallet
 } from 'lucide-react';
 import { mockTransactions } from '@/data/mock';
-import { Transaction } from '@/types/admin';
+import { Transaction } from '@/types/type';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
 

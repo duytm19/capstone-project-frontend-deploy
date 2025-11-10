@@ -8,11 +8,14 @@ import { Star } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatVND } from '@/lib/utils';
 import { useCart } from '@/context/CartContext';
+import PaymentDialog from '@/components/user/payment/PaymentDialog';
+import { useState } from 'react';
 
 const CourseDetail = () => {
   const { id } = useParams();
   const course = mockCourses.find(c => c.id === id);
   const { addItem } = useCart();
+  const [buyOpen, setBuyOpen] = useState(false);
 
   if (!course) {
     return (
@@ -146,13 +149,24 @@ const CourseDetail = () => {
                         </span>
                       </div>
 
-                    <Button
-                      size="lg"
-                      className="w-full bg-gradient-primary shadow-accent text-lg"
-                      onClick={() => addItem(course)}
-                    >
-                      Thêm vào giỏ
-                    </Button>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Button
+                          size="lg"
+                          className="w-full bg-gradient-primary shadow-accent text-lg"
+                          onClick={() => setBuyOpen(true)}
+                          disabled={(course.price || 0) <= 0}
+                        >
+                          Mua ngay
+                        </Button>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="w-full text-lg"
+                          onClick={() => addItem(course)}
+                        >
+                          Thêm vào giỏ
+                        </Button>
+                      </div>
                   </div>
                 </div>
               </div>
@@ -160,6 +174,14 @@ const CourseDetail = () => {
           </div>
         </div>
       </main>
+
+      <PaymentDialog
+        open={buyOpen}
+        onOpenChange={setBuyOpen}
+        amount={course.price || 0}
+        title="Xác nhận đơn hàng"
+        items={[{ title: course.title, price: course.price || 0 }]}
+      />
 
       <Footer />
     </div>

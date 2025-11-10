@@ -22,6 +22,8 @@ import {
   mockFlashcardDecks,
   mockFlashcards,
 } from '@/data/mock';
+import DeckList from '@/components/flashcards/DeckList';
+import CardList from '@/components/flashcards/CardList';
 
 const currentUserId = '1';
 
@@ -221,44 +223,20 @@ const Flashcards = () => {
                   </Button>
                 </div>
 
-                <div className="space-y-3">
-                  {decks.length > 0 ? (
-                    decks.map((deck) => (
-                      <div
-                        key={deck.id}
-                        className={`border rounded-xl p-4 flex items-start justify-between hover:shadow-sm transition cursor-pointer ${
-                          selectedDeckId === deck.id ? 'border-primary' : 'border-border'
-                        }`}
-                        onClick={() => setSelectedDeckId(deck.id)}
-                      >
-                        <div className="pr-4">
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-lg font-semibold">{deck.title}</h3>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${deck.isPublic ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                              {deck.isPublic ? 'Công khai' : 'Riêng tư'}
-                            </span>
-                          </div>
-                          {deck.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{deck.description}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-2">Tạo ngày: {formatDate(deck.createdAt)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); openEditDeck(deck); }}>
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); deleteDeck(deck); }}>
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="border rounded-xl p-6 text-center text-muted-foreground">
-                      Chưa có bộ thẻ nào. Hãy tạo bộ thẻ đầu tiên!
-                    </div>
-                  )}
-                </div>
+                {decks.length > 0 ? (
+                  <DeckList
+                    decks={decks}
+                    selectedDeckId={selectedDeckId}
+                    onSelectDeck={setSelectedDeckId}
+                    onEditDeck={openEditDeck}
+                    onDeleteDeck={deleteDeck}
+                    formatDate={formatDate}
+                  />
+                ) : (
+                  <div className="border rounded-xl p-6 text-center text-muted-foreground">
+                    Chưa có bộ thẻ nào. Hãy tạo bộ thẻ đầu tiên!
+                  </div>
+                )}
               </div>
 
               {/* Cards Panel */}
@@ -274,29 +252,11 @@ const Flashcards = () => {
 
                 {selectedDeckId ? (
                   selectedDeckCards.length > 0 ? (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {selectedDeckCards.map((card) => (
-                        <div key={card.id} className="border rounded-xl p-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <div className="font-semibold">{card.frontContent}</div>
-                              <div className="text-sm text-muted-foreground mt-1">{card.backContent}</div>
-                              {card.exampleSentence && (
-                                <div className="text-xs text-muted-foreground mt-2 italic">{card.exampleSentence}</div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={() => openEditCard(card)}>
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="destructive" size="sm" onClick={() => deleteCard(card)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <CardList
+                      cards={selectedDeckCards}
+                      onEditCard={openEditCard}
+                      onDeleteCard={deleteCard}
+                    />
                   ) : (
                     <div className="border rounded-xl p-6 text-center text-muted-foreground">
                       Chưa có thẻ nào trong bộ này. Hãy thêm thẻ!

@@ -233,3 +233,21 @@ export interface UserActivity {
   user: User;
   transaction: Transaction;
 }
+
+export interface FlashcardDeck {
+  id: string;
+  title: string;
+  createdAt: string;
+  description?: string;
+  isPublic: boolean;
+  userId: string;
+}
+
+export interface Flashcard {
+  id: string;
+  frontContent: string;
+  backContent: string;
+  exampleSentence?: string;
+  audioUrl?: string;
+  deckId: string;
+}

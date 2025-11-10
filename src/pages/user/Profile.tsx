@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Edit, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { mockUsers } from '@/data/mock';
-import { User } from '@/types/admin';
+import { User } from '@/types/type';
 import { formatVND } from '@/lib/utils';
 
 const currentUserId = '1';

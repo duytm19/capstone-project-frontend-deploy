@@ -20,7 +20,7 @@ import {
   Test,
   EnglishTestType,
   UserActivity
-} from '../types/admin';
+} from '../types/type';
 
 // Mock NotificationTypes
 export const mockNotificationTypes: NotificationType[] = [

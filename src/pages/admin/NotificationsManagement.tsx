@@ -30,7 +30,7 @@ import {
   UserCog
 } from 'lucide-react';
 import { mockNotifications, mockUsers, mockNotificationTypes } from '@/data/mock';
-import { Notification, NotificationType, User } from '@/types/admin';
+import { Notification, NotificationType, User } from '@/types/type';
 import StatCard from '@/components/admin/StatCard';
 import FilterSection from '@/components/admin/FilterSection';
 import DataTable from '@/components/admin/DataTable';
