@@ -98,7 +98,7 @@ export const mockUsers: User[] = [
     role: 'COURSESELLER',
     wallet: {
       id: 'w1',
-      allowance: 1500000,
+      allowance: 10500000,
       userId: '1'
     },
     courseSellerProfile: {
@@ -851,7 +851,7 @@ export const mockCourses: Course[] = [
     createdAt: '2024-02-15T14:30:00.000Z',
     updatedAt: '2024-10-15T14:30:00.000Z',
     averageRating: 4.9,
-    courseSeller: mockUsers[2]
+    courseSeller: mockUsers[0]
   },
   {
     id: 'c3',
@@ -2205,9 +2205,10 @@ export const mockCourseSellerApplications: CourseSellerApplication[] = [
 
 // Mock Reports với dữ liệu phù hợp schema
 export const mockReports: Report[] = [
+  // INAPPROPRIATE_CONTENT reports
   {
     id: 'r1',
-    content: 'This course contains inappropriate language and offensive content.',
+    content: 'This course contains inappropriate language and offensive content in several video lessons. The instructor uses profanity when explaining grammar rules.',
     reasonType: 'INAPPROPRIATE_CONTENT',
     createdAt: '2024-10-25T10:30:00.000Z',
     userId: '2',
@@ -2217,23 +2218,403 @@ export const mockReports: Report[] = [
   },
   {
     id: 'r2',
-    content: 'The instructor is not responding to student questions and messages.',
-    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
-    createdAt: '2024-10-24T15:45:00.000Z',
+    content: 'Found sexually explicit images in Lesson 5 materials. This is completely unacceptable for an educational platform.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-10-23T14:20:00.000Z',
     userId: '4',
-    courseId: 'c2',
+    courseId: 'c7',
     user: mockUsers[3],
-    course: mockCourses[1]
+    course: mockCourses[6]
   },
   {
     id: 'r3',
-    content: 'Course content does not match the description provided.',
+    content: 'The course contains hate speech and discriminatory remarks against certain ethnic groups. This violates community guidelines.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-10-20T09:15:00.000Z',
+    userId: '8',
+    courseId: 'c12',
+    user: mockUsers[7],
+    course: mockCourses[11]
+  },
+  {
+    id: 'r4',
+    content: 'Instructor makes inappropriate jokes about students\' appearance and personal life in the video lectures.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-10-18T16:40:00.000Z',
+    userId: '10',
+    courseId: 'c15',
+    user: mockUsers[9],
+    course: mockCourses[14]
+  },
+  {
+    id: 'r5',
+    content: 'Course materials include violent and disturbing imagery that is not relevant to English learning.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-10-15T11:25:00.000Z',
+    userId: '6',
+    courseId: 'c20',
+    user: mockUsers[5],
+    course: mockCourses[19]
+  },
+
+  // COPYRIGHT_VIOLATION reports
+  {
+    id: 'r6',
+    content: 'This course is using copyrighted materials from Oxford University Press without permission. Multiple textbook pages are directly copied.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-24T13:50:00.000Z',
+    userId: '3',
+    courseId: 'c2',
+    user: mockUsers[2],
+    course: mockCourses[1]
+  },
+  {
+    id: 'r7',
+    content: 'The video lectures contain copyrighted BBC content without proper licensing or attribution.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-22T10:30:00.000Z',
+    userId: '5',
+    courseId: 'c5',
+    user: mockUsers[4],
+    course: mockCourses[4]
+  },
+  {
+    id: 'r8',
+    content: 'Course uses Cambridge IELTS practice tests which are copyrighted materials. This is illegal distribution.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-19T15:20:00.000Z',
+    userId: '7',
+    courseId: 'c10',
+    user: mockUsers[6],
+    course: mockCourses[9]
+  },
+  {
+    id: 'r9',
+    content: 'Audio materials are stolen from Rosetta Stone course. I recognize the exact same recordings.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-17T08:45:00.000Z',
+    userId: '9',
+    courseId: 'c14',
+    user: mockUsers[8],
+    course: mockCourses[13]
+  },
+  {
+    id: 'r10',
+    content: 'This course plagiarizes content from my own published course on Udemy. Multiple lessons are identical copies.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-14T14:10:00.000Z',
+    userId: '1',
+    courseId: 'c18',
+    user: mockUsers[0],
+    course: mockCourses[17]
+  },
+  {
+    id: 'r11',
+    content: 'Uses TED Talk videos without proper licensing. The instructor is monetizing copyrighted content.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-12T11:35:00.000Z',
+    userId: '11',
+    courseId: 'c22',
+    user: mockUsers[10],
+    course: mockCourses[21]
+  },
+
+  // NOT_AS_DESCRIBED reports
+  {
+    id: 'r12',
+    content: 'Course description promised 50 video lessons but only contains 15. This is false advertising.',
     reasonType: 'NOT_AS_DESCRIBED',
     createdAt: '2024-10-23T09:20:00.000Z',
-    userId: '6',
+    userId: '2',
     courseId: 'c3',
-    user: mockUsers[5],
+    user: mockUsers[1],
     course: mockCourses[2]
+  },
+  {
+    id: 'r13',
+    content: 'The course claims to be for C1 level but the content is basic A2 level. Completely misleading.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-21T16:55:00.000Z',
+    userId: '4',
+    courseId: 'c6',
+    user: mockUsers[3],
+    course: mockCourses[5]
+  },
+  {
+    id: 'r14',
+    content: 'Description says "Native English speaker instructor" but the teacher clearly has poor English pronunciation and grammar.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-19T12:40:00.000Z',
+    userId: '6',
+    courseId: 'c9',
+    user: mockUsers[5],
+    course: mockCourses[8]
+  },
+  {
+    id: 'r15',
+    content: 'Promised weekly live sessions but there has been zero live interaction in 2 months of enrollment.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-16T10:15:00.000Z',
+    userId: '8',
+    courseId: 'c13',
+    user: mockUsers[7],
+    course: mockCourses[12]
+  },
+  {
+    id: 'r16',
+    content: 'Course advertised as "Business English for Executives" but covers only basic vocabulary. Not suitable for professionals.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-14T08:30:00.000Z',
+    userId: '10',
+    courseId: 'c17',
+    user: mockUsers[9],
+    course: mockCourses[16]
+  },
+  {
+    id: 'r17',
+    content: 'No certificate provided as promised in the course description. Tried contacting support multiple times.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-11T15:25:00.000Z',
+    userId: '3',
+    courseId: 'c21',
+    user: mockUsers[2],
+    course: mockCourses[20]
+  },
+  {
+    id: 'r18',
+    content: 'Course description mentions comprehensive grammar workbook but no workbook materials are included.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-09T13:50:00.000Z',
+    userId: '5',
+    courseId: 'c25',
+    user: mockUsers[4],
+    course: mockCourses[24]
+  },
+
+  // UNRESPONSIVE_INSTRUCTOR reports
+  {
+    id: 'r19',
+    content: 'The instructor has not responded to my questions for over 3 weeks. Completely unprofessional.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-24T15:45:00.000Z',
+    userId: '2',
+    courseId: 'c4',
+    user: mockUsers[1],
+    course: mockCourses[3]
+  },
+  {
+    id: 'r20',
+    content: 'Sent 5 messages to instructor about technical issues with course access. No response at all.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-22T11:30:00.000Z',
+    userId: '4',
+    courseId: 'c8',
+    user: mockUsers[3],
+    course: mockCourses[7]
+  },
+  {
+    id: 'r21',
+    content: 'Instructor promised to update course materials 2 months ago but has gone completely silent.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-20T14:20:00.000Z',
+    userId: '6',
+    courseId: 'c11',
+    user: mockUsers[5],
+    course: mockCourses[10]
+  },
+  {
+    id: 'r22',
+    content: 'No feedback on submitted assignments for over 6 weeks. This defeats the purpose of the course.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-18T09:55:00.000Z',
+    userId: '8',
+    courseId: 'c16',
+    user: mockUsers[7],
+    course: mockCourses[15]
+  },
+  {
+    id: 'r23',
+    content: 'Instructor account appears abandoned. Last login was 45 days ago according to course forum.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-15T16:40:00.000Z',
+    userId: '10',
+    courseId: 'c19',
+    user: mockUsers[9],
+    course: mockCourses[18]
+  },
+  {
+    id: 'r24',
+    content: 'Multiple students complaining about lack of instructor engagement. Discussion forum is completely ignored.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-13T12:15:00.000Z',
+    userId: '1',
+    courseId: 'c23',
+    user: mockUsers[0],
+    course: mockCourses[22]
+  },
+
+  // INCOMPLETE_CONTENT reports
+  {
+    id: 'r25',
+    content: 'Course is marked as complete but sections 8-12 are empty with "Coming Soon" placeholders. Been like this for 4 months.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-23T10:45:00.000Z',
+    userId: '3',
+    courseId: 'c1',
+    user: mockUsers[2],
+    course: mockCourses[0]
+  },
+  {
+    id: 'r26',
+    content: 'Half of the video lessons are broken links. Cannot access essential course materials.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-21T14:30:00.000Z',
+    userId: '5',
+    courseId: 'c7',
+    user: mockUsers[4],
+    course: mockCourses[6]
+  },
+  {
+    id: 'r27',
+    content: 'Module 3 and Module 4 are completely missing. Course appears to be abandoned mid-production.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-19T08:20:00.000Z',
+    userId: '7',
+    courseId: 'c12',
+    user: mockUsers[6],
+    course: mockCourses[11]
+  },
+  {
+    id: 'r28',
+    content: 'Many quiz questions have no correct answers marked. Cannot complete assessments properly.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-17T15:50:00.000Z',
+    userId: '9',
+    courseId: 'c15',
+    user: mockUsers[8],
+    course: mockCourses[14]
+  },
+  {
+    id: 'r29',
+    content: 'Downloadable resources mentioned in videos are not actually available. Links lead to 404 errors.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-15T11:10:00.000Z',
+    userId: '11',
+    courseId: 'c20',
+    user: mockUsers[10],
+    course: mockCourses[19]
+  },
+  {
+    id: 'r30',
+    content: 'Final exam is not accessible. Course cannot be completed to receive certificate.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-13T09:35:00.000Z',
+    userId: '2',
+    courseId: 'c24',
+    user: mockUsers[1],
+    course: mockCourses[23]
+  },
+  {
+    id: 'r31',
+    content: 'Audio files for listening exercises are corrupted or missing. Major section of course is unusable.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-11T16:20:00.000Z',
+    userId: '4',
+    courseId: 'c27',
+    user: mockUsers[3],
+    course: mockCourses[26]
+  },
+  {
+    id: 'r32',
+    content: 'Practice exercises have no answer keys. Impossible to self-check work and learn from mistakes.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-09T13:45:00.000Z',
+    userId: '6',
+    courseId: 'c30',
+    user: mockUsers[5],
+    course: mockCourses[29]
+  },
+
+  // Additional mixed reports
+  {
+    id: 'r33',
+    content: 'Instructor uses course platform to promote unrelated products and services. Very unprofessional.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-10-08T10:25:00.000Z',
+    userId: '8',
+    courseId: 'c5',
+    user: mockUsers[7],
+    course: mockCourses[4]
+  },
+  {
+    id: 'r34',
+    content: 'Course materials copied from Coursera without attribution. This is academic dishonesty.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-10-06T15:40:00.000Z',
+    userId: '10',
+    courseId: 'c9',
+    user: mockUsers[9],
+    course: mockCourses[8]
+  },
+  {
+    id: 'r35',
+    content: 'Advertised as "Lifetime Access" but course disappeared from my account after 6 months.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-10-05T12:15:00.000Z',
+    userId: '1',
+    courseId: 'c14',
+    user: mockUsers[0],
+    course: mockCourses[13]
+  },
+  {
+    id: 'r36',
+    content: 'Instructor has not logged in for 2 months. Course support is completely dead.',
+    reasonType: 'UNRESPONSIVE_INSTRUCTOR',
+    createdAt: '2024-10-03T08:50:00.000Z',
+    userId: '3',
+    courseId: 'c18',
+    user: mockUsers[2],
+    course: mockCourses[17]
+  },
+  {
+    id: 'r37',
+    content: 'Supplementary materials promised in course outline are nowhere to be found.',
+    reasonType: 'INCOMPLETE_CONTENT',
+    createdAt: '2024-10-01T14:30:00.000Z',
+    userId: '5',
+    courseId: 'c22',
+    user: mockUsers[4],
+    course: mockCourses[21]
+  },
+  {
+    id: 'r38',
+    content: 'Videos contain political propaganda that has nothing to do with English learning.',
+    reasonType: 'INAPPROPRIATE_CONTENT',
+    createdAt: '2024-09-28T11:20:00.000Z',
+    userId: '7',
+    courseId: 'c26',
+    user: mockUsers[6],
+    course: mockCourses[25]
+  },
+  {
+    id: 'r39',
+    content: 'Uses National Geographic photos without proper licensing or permission.',
+    reasonType: 'COPYRIGHT_VIOLATION',
+    createdAt: '2024-09-25T16:45:00.000Z',
+    userId: '9',
+    courseId: 'c28',
+    user: mockUsers[8],
+    course: mockCourses[27]
+  },
+  {
+    id: 'r40',
+    content: 'Course claimed to include one-on-one tutoring sessions but this was never provided.',
+    reasonType: 'NOT_AS_DESCRIBED',
+    createdAt: '2024-09-22T09:10:00.000Z',
+    userId: '11',
+    courseId: 'c31',
+    user: mockUsers[10],
+    course: mockCourses[30]
   }
 ];
 
@@ -3490,7 +3871,7 @@ export const mockFlashcardDecks: FlashcardDeck[] = [
     createdAt: '2024-02-20T14:30:00.000Z',
     description: 'Academic vocabulary for IELTS preparation',
     isPublic: true,
-    userId: '3'
+    userId: '2'
   },
   {
     id: 'deck3',
@@ -3572,14 +3953,14 @@ export const mockFlashcards: Flashcard[] = [
     frontContent: 'Diagnosis',
     backContent: 'The identification of a disease or condition',
     exampleSentence: 'The doctor made a diagnosis after reviewing the test results.',
-    deckId: 'deck3'
+    deckId: 'deck1'
   },
   {
     id: 'fc7',
     frontContent: 'Symptom',
     backContent: 'A physical or mental feature indicating a condition',
     exampleSentence: 'Fever is a common symptom of many infections.',
-    deckId: 'deck3'
+    deckId: 'deck1'
   },
   // Deck 4 - Legal
   {
@@ -3587,14 +3968,14 @@ export const mockFlashcards: Flashcard[] = [
     frontContent: 'Litigation',
     backContent: 'The process of taking legal action',
     exampleSentence: 'The company decided to pursue litigation against the competitor.',
-    deckId: 'deck4'
+    deckId: 'deck1'
   },
   {
     id: 'fc9',
     frontContent: 'Jurisdiction',
     backContent: 'The official power to make legal decisions',
     exampleSentence: 'This case falls under federal jurisdiction.',
-    deckId: 'deck4'
+    deckId: 'deck1'
   },
   // Deck 5 - Idioms
   {
@@ -4102,22 +4483,22 @@ export const mockUserAnswers: UserAnswer[] = [
 export const mockUserActivities: UserActivity[] = [
   {
     id: 'activity1',
-    userId: '2',
+    userId: '1',
     transactionId: 't1',
     courseId: 'c1',
     createdAt: '2024-10-25T15:30:00.000Z',
     expiresAt: '2025-10-25T15:30:00.000Z',
-    user: mockUsers[1],
+    user: mockUsers[0],
     transaction: mockTransactions[0]
   },
   {
     id: 'activity2',
-    userId: '4',
+    userId: '1',
     transactionId: 't2',
     courseId: 'c2',
     createdAt: '2024-10-24T14:20:00.000Z',
     expiresAt: '2025-10-24T14:20:00.000Z',
-    user: mockUsers[3],
+    user: mockUsers[0],
     transaction: mockTransactions[1]
   },
   {

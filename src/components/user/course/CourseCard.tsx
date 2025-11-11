@@ -8,14 +8,22 @@ import { useCart } from '@/context/CartContext';
 
 interface CourseCardProps {
   course: AdminCourse;
+  hideAddToCart?: boolean;
+  purchased?: boolean;
 }
 
-const CourseCard = ({ course }: CourseCardProps) => {
+const CourseCard = ({ course, hideAddToCart = false, purchased = false }: CourseCardProps) => {
   const { addItem } = useCart();
   return (
     <Link to={`/courses/${course.id}`}>
-      <div className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-accent transition-all duration-300 border border-border hover:border-primary/20 h-full flex flex-col">
+      <div className="group bg-card rounded-2xl overflow-hidden shadow-sm hover:shadow-accent transition-all duration-300 border border-border hover:border-primary/20 h-full flex flex-col relative">
         {/* Thumbnail removed: not available in admin mock */}
+
+        {purchased && (
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-secondary text-secondary-foreground">Đã mua</Badge>
+          </div>
+        )}
 
         {/* Content */}
         <div className="p-6 flex flex-col flex-1">
@@ -63,17 +71,19 @@ const CourseCard = ({ course }: CourseCardProps) => {
               <span className="text-2xl font-bold text-primary">
                 {formatVND(course.price)}
               </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  addItem(course);
-                }}
-              >
-                Thêm vào giỏ
-              </Button>
+              {!hideAddToCart && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addItem(course);
+                  }}
+                >
+                  Thêm vào giỏ
+                </Button>
+              )}
             </div>
           </div>
         </div>

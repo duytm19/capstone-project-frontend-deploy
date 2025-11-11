@@ -19,9 +19,11 @@ import { Calendar, Edit, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { mockUsers } from '@/data/mock';
 import { User } from '@/types/type';
+import CourseSellerApplicationDialog from '@/components/user/account/CourseSellerApplicationDialog';
+import type { CourseSellerApplication } from '@/types/type';
 import { formatVND } from '@/lib/utils';
 
-const currentUserId = '1';
+const currentUserId = (typeof window !== 'undefined' ? localStorage.getItem('currentUserId') : null) ?? '1';
 
 const englishLevels = ['A1','A2','B1','B2','C1','C2'];
 
@@ -74,6 +76,19 @@ export default function Profile() {
     englishLevel: user.englishLevel || 'B1',
     learningGoals: [...(user.learningGoals || [])] as string[],
     bio: '',
+  });
+
+  // Course seller application UI states
+  const [applicationOpen, setApplicationOpen] = useState(false);
+  const [myApplications, setMyApplications] = useState<CourseSellerApplication[]>(() => {
+    try {
+      const raw = localStorage.getItem('skillboost_course_seller_applications_v1');
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? (arr as CourseSellerApplication[]).filter(a => a.userId === currentUserId) : [];
+    } catch {
+      return [];
+    }
   });
 
   const handleChange = (key: keyof typeof form, value: any) => {
@@ -273,7 +288,136 @@ export default function Profile() {
             </Card>
           </div>
         </section>
+
+        {/* Course Seller Application */}
+        <section className="py-2">
+          <div className="container mx-auto px-4 lg:max-w-4xl">
+            <Card className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Trở thành người bán khóa học</h2>
+                {user.role === 'COURSESELLER' ? (
+                  <Badge variant="outline">Bạn đã là giảng viên</Badge>
+                ) : null}
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                Gửi đơn đăng ký để đội ngũ admin xét duyệt. Bạn nên cung cấp chứng chỉ và chuyên môn liên quan đến giảng dạy.
+              </p>
+
+              {user.role !== 'COURSESELLER' ? (
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm">Trạng thái đơn mới nhất:</p>
+                    {myApplications.length > 0 ? (
+                      <div className="mt-2">
+                        {(() => {
+                          const latest = myApplications[0];
+                          const statusLabel = latest.status === 'PENDING' ? 'Đang chờ duyệt' : latest.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối';
+                          const statusVariant = latest.status === 'APPROVED' ? 'default' : latest.status === 'REJECTED' ? 'destructive' : 'secondary';
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Badge variant={statusVariant as any}>{statusLabel}</Badge>
+                              <span className="text-xs text-muted-foreground">{new Date(latest.createdAt).toLocaleDateString('vi-VN')}</span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-1">Chưa có đơn nào</p>
+                    )}
+                  </div>
+                  <div>
+                    <Button
+                      variant="default"
+                      onClick={() => setApplicationOpen(true)}
+                      disabled={myApplications.some(a => a.status === 'PENDING')}
+                    >
+                      {myApplications.some(a => a.status === 'PENDING') ? 'Đang chờ duyệt' : 'Nộp đơn'}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Thông tin giảng viên</h3>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Chứng chỉ</p>
+                    <div className="flex flex-wrap gap-2">
+                      {user.courseSellerProfile?.certification?.map((c) => (
+                        <Badge key={c} variant="secondary">{c}</Badge>
+                      ))}
+                      {(!user.courseSellerProfile?.certification || user.courseSellerProfile?.certification.length === 0) && (
+                        <p className="text-sm text-muted-foreground">—</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Chuyên môn</p>
+                    <div className="flex flex-wrap gap-2">
+                      {user.courseSellerProfile?.expertise?.map((e) => (
+                        <Badge key={e} variant="secondary">{e}</Badge>
+                      ))}
+                      {(!user.courseSellerProfile?.expertise || user.courseSellerProfile?.expertise.length === 0) && (
+                        <p className="text-sm text-muted-foreground">—</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Danh sách đơn đã nộp */}
+              {myApplications.length > 0 && user.role !== 'COURSESELLER' && (
+                <div className="pt-4 border-t">
+                  <h3 className="text-sm font-medium mb-3">Đơn đã nộp</h3>
+                  <div className="space-y-3">
+                    {myApplications.map((app) => (
+                      <div key={app.id} className="p-3 rounded-md border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Badge variant={app.status === 'APPROVED' ? 'default' : app.status === 'REJECTED' ? 'destructive' : 'secondary'}>
+                              {app.status === 'PENDING' ? 'Đang chờ duyệt' : app.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{new Date(app.createdAt).toLocaleString('vi-VN')}</span>
+                          </div>
+                        </div>
+                        {app.message && (
+                          <p className="text-sm text-muted-foreground mt-2">{app.message}</p>
+                        )}
+                        {app.rejectionReason && (
+                          <p className="text-sm text-destructive mt-2">Lý do từ chối: {app.rejectionReason}</p>
+                        )}
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">Chứng chỉ</p>
+                          <div className="flex flex-wrap gap-2">
+                            {app.certification.map((c) => (
+                              <Badge key={c} variant="outline">{c}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <p className="text-xs text-muted-foreground mb-1">Chuyên môn</p>
+                          <div className="flex flex-wrap gap-2">
+                            {app.expertise.map((e) => (
+                              <Badge key={e} variant="outline">{e}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          </div>
+        </section>
       </main>
+
+      {/* Dialog nộp đơn giảng viên */}
+      <CourseSellerApplicationDialog
+        open={applicationOpen}
+        onOpenChange={setApplicationOpen}
+        userId={currentUserId}
+        onSubmitted={(app) => setMyApplications((prev) => [app, ...prev])}
+      />
 
       <Footer />
     </div>

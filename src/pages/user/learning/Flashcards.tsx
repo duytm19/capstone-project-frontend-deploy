@@ -24,8 +24,9 @@ import {
 } from '@/data/mock';
 import DeckList from '@/components/flashcards/DeckList';
 import CardList from '@/components/flashcards/CardList';
+import StudyMode from '@/components/flashcards/StudyMode';
 
-const currentUserId = '1';
+const currentUserId = (typeof window !== 'undefined' ? localStorage.getItem('currentUserId') : null) ?? '1';
 
 const Flashcards = () => {
   // Deck state
@@ -67,6 +68,7 @@ const Flashcards = () => {
     backContent: '',
     exampleSentence: '',
   });
+  const [studyDialogOpen, setStudyDialogOpen] = useState(false);
 
   // Helpers
   const formatDate = (iso: string) =>
@@ -245,9 +247,18 @@ const Flashcards = () => {
                   <h2 className="text-2xl font-semibold">
                     {selectedDeck ? `Thẻ trong: ${selectedDeck.title}` : 'Chọn một bộ thẻ'}
                   </h2>
-                  <Button onClick={openCreateCard} disabled={!selectedDeckId} className="bg-primary">
-                    <Plus className="w-4 h-4 mr-2" /> Thêm thẻ
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={openCreateCard} disabled={!selectedDeckId} className="bg-primary">
+                      <Plus className="w-4 h-4 mr-2" /> Thêm thẻ
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setStudyDialogOpen(true)}
+                      disabled={!selectedDeckId || selectedDeckCards.length === 0}
+                    >
+                      Học thẻ
+                    </Button>
+                  </div>
                 </div>
 
                 {selectedDeckId ? (
@@ -431,6 +442,17 @@ const Flashcards = () => {
             <Button variant="outline" onClick={() => setEditingCard(null)}>Hủy</Button>
             <Button onClick={saveEditCard} className="bg-primary">Lưu</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Study Mode Dialog */}
+      <Dialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <StudyMode
+            cards={selectedDeckCards}
+            userId={currentUserId}
+            onClose={() => setStudyDialogOpen(false)}
+          />
         </DialogContent>
       </Dialog>
 

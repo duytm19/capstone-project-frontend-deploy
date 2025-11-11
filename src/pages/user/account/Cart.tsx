@@ -9,6 +9,7 @@ import { useCart } from '@/context/CartContext';
 import PaymentDialog from '@/components/user/payment/PaymentDialog';
 import { Trash2 } from 'lucide-react';
 // import { toast } from 'sonner';
+import { usePurchases } from '@/context/PurchasesContext';
 
 const CartPage = () => {
   const { items, removeItem, clear, total } = useCart();
@@ -36,6 +37,7 @@ const CartPage = () => {
     setPayOpen(true);
   };
 
+  const { addCourses } = usePurchases();
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -118,6 +120,12 @@ const CartPage = () => {
         items={selectedItems.map((i) => ({ title: i.title, price: i.price }))}
         confirmLabel="Xác nhận"
         onConfirm={() => {
+          // Lưu các khoá học đã chọn vào thư viện
+          const coursesToAdd = selectedItems
+            .map((i) => i.course)
+            .filter((c): c is NonNullable<typeof c> => Boolean(c));
+          addCourses(coursesToAdd);
+          // Xoá khỏi giỏ
           selectedIds.forEach((id) => removeItem(id));
           setSelectedIds([]);
         }}

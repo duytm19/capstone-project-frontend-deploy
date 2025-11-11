@@ -13,10 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { usePurchases } from '@/context/PurchasesContext';
 
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
+  const { items } = usePurchases();
 
   const levels = ['all', ...Array.from(new Set(mockCourses.map(c => c.courseLevel).filter(Boolean)))] as string[];
 
@@ -26,6 +28,10 @@ const Courses = () => {
     const matchesLevel = selectedLevel === 'all' || course.courseLevel === selectedLevel;
     return matchesSearch && matchesLevel;
   });
+
+  const purchasedIds = new Set(items.map(i => i.course.id));
+  const filteredPurchasedCourses = filteredCourses.filter(c => purchasedIds.has(c.id));
+  const filteredUnpurchasedCourses = filteredCourses.filter(c => !purchasedIds.has(c.id));
 
   return (
     <div className="min-h-screen">
@@ -91,10 +97,42 @@ const Courses = () => {
             </div>
 
             {filteredCourses.length > 0 ? (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredCourses.map((course) => (
-                  <CourseCard key={course.id} course={course} />
-                ))}
+              <div className="space-y-12">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold">Khóa học của bạn</h3>
+                    {filteredPurchasedCourses.length > 0 && (
+                      <span className="text-sm text-muted-foreground">{filteredPurchasedCourses.length} khóa</span>
+                    )}
+                  </div>
+                  {filteredPurchasedCourses.length > 0 ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredPurchasedCourses.map((course) => (
+                        <CourseCard key={course.id} course={course} hideAddToCart purchased />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-border rounded-xl p-6 text-center text-muted-foreground">Bạn chưa mua khóa học nào phù hợp với bộ lọc.</div>
+                  )}
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-semibold">Các khóa học khác</h3>
+                    {filteredUnpurchasedCourses.length > 0 && (
+                      <span className="text-sm text-muted-foreground">{filteredUnpurchasedCourses.length} khóa</span>
+                    )}
+                  </div>
+                  {filteredUnpurchasedCourses.length > 0 ? (
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                      {filteredUnpurchasedCourses.map((course) => (
+                        <CourseCard key={course.id} course={course} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="border border-border rounded-xl p-6 text-center text-muted-foreground">Không còn khóa học nào khác phù hợp với bộ lọc.</div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center py-20">

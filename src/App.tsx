@@ -3,29 +3,39 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/user/Index";
-import Courses from "./pages/user/Courses";
-import CourseDetail from "./pages/user/CourseDetail";
-import Cart from "./pages/user/Cart";
-import Wallet from "./pages/user/Wallet";
-import Flashcards from "./pages/user/Flashcards";
-import Profile from "./pages/user/Profile";
-import About from "./pages/user/About";
-import Contact from "./pages/user/Contact";
-import Login from "./pages/user/Login";
-import Blog from "./pages/user/Blog";
-import NotFound from "./pages/user/NotFound";
+
+// User pages
+import Index from "./pages/user/home/Home";
+import Courses from "./pages/user/courses/Courses";
+import CourseDetail from "./pages/user/courses/CourseDetail";
+import Flashcards from "./pages/user/learning/Flashcards";
+import Profile from "./pages/user/account/Profile";
+import Wallet from "./pages/user/account/Wallet";
+import Cart from "./pages/user/account/Cart";
+import About from "./pages/user/info/About";
+import Contact from "./pages/user/info/Contact";
+import Blog from "./pages/user/info/Blog";
+import Notifications from "./pages/user/account/Notifications";
+import MyCourses from "./pages/user/courses/MyCourses";
+
+// Admin pages
+import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
+import UsersManagement from "./pages/admin/management/UsersManagement";
+import CoursesManagement from "./pages/admin/management/CoursesManagement";
+import ApplicationsManagement from "./pages/admin/management/ApplicationsManagement";
+import ReportsManagement from "./pages/admin/management/ReportsManagement";
+import NotificationsManagement from "./pages/admin/management/NotificationsManagement";
+import TransactionsManagement from "./pages/admin/finance/TransactionsManagement";
+import RevenueManagement from "./pages/admin/finance/RevenueManagement";
+import SubscriptionPlansManagement from "./pages/admin/finance/SubscriptionPlansManagement";
+import SubscriptionContractsManagement from "./pages/admin/finance/SubscriptionContractsManagement";
+
+// Shared pages
+import Login from "./pages/shared/auth/Login";
+import NotFound from "./pages/shared/NotFound";
+
+// Layouts
 import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import UsersManagement from "./pages/admin/UsersManagement";
-import CoursesManagement from "./pages/admin/CoursesManagement";
-import TransactionsManagement from "./pages/admin/TransactionsManagement";
-import ApplicationsManagement from "./pages/admin/ApplicationsManagement";
-import ReportsManagement from "./pages/admin/ReportsManagement";
-import NotificationsManagement from "./pages/admin/NotificationsManagement";
-import SubscriptionPlansManagement from "./pages/admin/SubscriptionPlansManagement";
-import SubscriptionContractsManagement from "./pages/admin/SubscriptionContractsManagement";
-import RevenueManagement from "./pages/admin/RevenueManagement";
 
 const queryClient = new QueryClient();
 
@@ -39,10 +49,12 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/courses" element={<Courses />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
+          <Route path="/my-courses" element={<MyCourses />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />

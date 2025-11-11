@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,7 +8,25 @@ import { useToast } from '@/hooks/use-toast';
 
 const Login = () => {
   const { toast } = useToast();
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+
+  const computeIsLoginFromLocation = () => {
+    const params = new URLSearchParams(location.search);
+    const registerParam = params.get('register');
+    const modeParam = params.get('mode');
+    const hashLower = (location.hash || '').toLowerCase();
+    const wantsRegister = (
+      (registerParam !== null && registerParam !== '0' && registerParam !== 'false') ||
+      modeParam === 'register' ||
+      hashLower.includes('register')
+    );
+    return !wantsRegister;
+  };
+
+  const [isLogin, setIsLogin] = useState(computeIsLoginFromLocation());
+  useEffect(() => {
+    setIsLogin(computeIsLoginFromLocation());
+  }, [location.search, location.hash]);
   const [formData, setFormData] = useState({
     name: '',
     email: '',

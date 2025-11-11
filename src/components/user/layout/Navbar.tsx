@@ -1,12 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { Menu, X, BookOpen, User, ShoppingCart, Wallet } from 'lucide-react';
+import { Menu, X, BookOpen, User, ShoppingCart, Wallet, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
+import { mockNotifications } from '@/data/mock';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { count } = useCart();
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   const navLinks = [
     { to: '/', label: 'Trang chủ' },
@@ -16,6 +18,26 @@ const Navbar = () => {
     { to: '/blog', label: 'Blog' },
     { to: '/contact', label: 'Liên hệ' },
   ];
+
+  // Tính số thông báo chưa đọc cho người dùng hiện tại
+  useEffect(() => {
+    try {
+      const uid = (typeof window !== 'undefined' ? localStorage.getItem('currentUserId') : null) ?? '1';
+      const seenRaw = typeof window !== 'undefined'
+        ? localStorage.getItem(`skillboost_user_notifications_seen_v1_${uid}`)
+        : null;
+      const seenMap = seenRaw ? JSON.parse(seenRaw) : {};
+      const countUnread = mockNotifications
+        .filter(n => n.userIds?.includes(uid))
+        .reduce((acc, n) => {
+          const isSeen = (seenMap[n.id] ?? n.seen ?? false);
+          return acc + (isSeen ? 0 : 1);
+        }, 0);
+      setUnreadNotifications(countUnread);
+    } catch {
+      setUnreadNotifications(mockNotifications.filter(n => !n.seen).length);
+    }
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -52,6 +74,17 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <Link to="/notifications">
+              <Button variant="ghost" size="default" className="relative">
+                <Bell className="w-4 h-4 mr-2" />
+                Thông báo
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                    {unreadNotifications}
+                  </span>
+                )}
+              </Button>
+            </Link>
             <Link to="/wallet">
               <Button variant="ghost" size="default">
                 <Wallet className="w-4 h-4 mr-2" />
@@ -81,7 +114,7 @@ const Navbar = () => {
                 Đăng nhập
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/login?register=1">
               <Button className="bg-gradient-primary shadow-accent hover:opacity-90 transition-opacity">
                 Bắt đầu
               </Button>
@@ -118,6 +151,17 @@ const Navbar = () => {
                 </NavLink>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border mt-2">
+                <Link to="/notifications" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" size="lg" className="w-full relative">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Thông báo
+                    {unreadNotifications > 0 && (
+                      <span className="absolute top-1 right-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
+                        {unreadNotifications}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
                 <Link to="/wallet" onClick={() => setIsOpen(false)}>
                   <Button variant="ghost" size="lg" className="w-full">
                     <Wallet className="w-4 h-4 mr-2" />
@@ -147,7 +191,7 @@ const Navbar = () => {
                     Đăng nhập
                   </Button>
                 </Link>
-                <Link to="/login" onClick={() => setIsOpen(false)}>
+                <Link to="/login?register=1" onClick={() => setIsOpen(false)}>
                   <Button size="lg" className="w-full bg-gradient-primary shadow-accent">
                     Bắt đầu
                   </Button>
