@@ -37,7 +37,19 @@ import NotFound from "./pages/shared/NotFound";
 // Layouts
 import AdminLayout from "./components/admin/AdminLayout";
 
-const queryClient = new QueryClient();
+// Cấu hình QueryClient với default options
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // Retry 1 lần khi fail
+      refetchOnWindowFocus: false, // Không refetch khi focus window
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: false, // Không retry mutations
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
