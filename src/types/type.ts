@@ -12,8 +12,9 @@ export interface User {
   englishLevel?: string;
   learningGoals: string[];
   role?: 'ADMINISTRATOR' | 'COURSESELLER';
-  wallet?: Wallet;
-  courseSellerProfile?: CourseSellerProfile;
+  wallet?: Wallet|null;
+  courseSellerApplication?: CourseSellerApplication | null;
+  courseSellerProfile?: CourseSellerProfile|null;
   administratorProfile?: AdministratorProfile;
 }
 

@@ -66,8 +66,7 @@ class AuthService {
     data: RefreshTokenRequest
   ): Promise<ApiResponse<RefreshTokenResponse>> {
     const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>(
-      '/auth/refresh',
-      data
+      '/auth/refresh'
     );
     return response.data;
   }
@@ -88,7 +87,7 @@ class AuthService {
    */
   async logout(): Promise<ApiResponse<EmptyResponse>> {
     const response = await apiClient.post<ApiResponse<EmptyResponse>>(
-      '/auth/logout'
+      '/auth/logout',
     );
     return response.data;
   }
