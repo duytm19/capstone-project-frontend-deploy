@@ -66,8 +66,7 @@ class AuthService {
     data: RefreshTokenRequest
   ): Promise<ApiResponse<RefreshTokenResponse>> {
     const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>(
-      '/auth/refresh',
-      data
+      '/auth/refresh'
     );
     return response.data;
   }

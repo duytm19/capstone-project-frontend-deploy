@@ -2,11 +2,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { authService, type LoginRequest, type RegisterRequest, type LoginResponse } from '@/lib/api/services';
-
 /**
  * Custom hook cho Authentication với React Query
  * Xử lý login, logout, và quản lý token
  */
+
 export const useAuth = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -40,9 +40,9 @@ export const useAuth = () => {
 
       // Lưu tokens vào localStorage
       localStorage.setItem('accessToken', accessToken);
-      if (refreshToken) {
-        localStorage.setItem('refreshToken', refreshToken);
-      }
+      // if (refreshToken) {
+      //   localStorage.setItem('refreshToken', refreshToken);
+      // }
 
       // Lưu user info vào query cache
       queryClient.setQueryData(['user'], user);
@@ -66,7 +66,7 @@ export const useAuth = () => {
     onSuccess: () => {
       // Xóa tokens
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // localStorage.removeItem('refreshToken');
 
       // Clear query cache
       queryClient.clear();
@@ -77,7 +77,7 @@ export const useAuth = () => {
     onError: (error) => {
       // Ngay cả khi API fail, vẫn logout local
       localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      // localStorage.removeItem('refreshToken');
       queryClient.clear();
       navigate('/login');
     },
