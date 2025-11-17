@@ -4,7 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { toast } from "sonner";
-import type { ApiError } from "@/lib/api/types";
+// import type { ApiError } from "@/lib/api/types";
 type FailedQueuePromise = {
   resolve: (token: string) => void;
   reject: (err: unknown) => void; // THAY ĐỔI: any -> unknown
