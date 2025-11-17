@@ -1,5 +1,5 @@
 import { useQuery,useQueryClient,useMutation } from '@tanstack/react-query';
-import { flashcardService, type SubmitReviewDTO } from '@/lib/api/services/flashcard.service';
+import { flashcardService, type SubmitReviewDTO, type DeckFormDTO } from '@/lib/api/services/flashcard.service';
 
 import { toast } from 'sonner';
 // Tạo key factory giúp quản lý key nhất quán
@@ -16,6 +16,21 @@ export const useGetDecks = () => {
   return useQuery({
     queryKey: flashcardKeys.allDecks,
     queryFn: async () => (await flashcardService.getMyDecks()).data,
+  });
+};
+export const useCreateDeck = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: DeckFormDTO) => flashcardService.createDeck(data),
+    
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: flashcardKeys.allDecks });
+      toast.success('Tạo bộ thẻ thành công!');
+    },
+    onError: (error:any) => {
+      const message = error.response?.data?.message || "Tạo bộ thẻ thất bại";
+      toast.error(message);
+    },
   });
 };
 

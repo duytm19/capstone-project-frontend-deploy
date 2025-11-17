@@ -7,12 +7,22 @@ export type ReviewQuality = 1 | 3 | 4 | 5; // Dựa theo backend service
 export interface SubmitReviewDTO {
   quality: ReviewQuality;
 }
+export interface DeckFormDTO {
+  title: string;
+  description?: string;
+  isPublic: boolean;
+  tagIds?: string[]; // 👈 THÊM DÒNG NÀY
+}
 class FlashcardService {
   /**
    * Lấy tất cả bộ thẻ (decks) của user đang đăng nhập
    */
   async getMyDecks(): Promise<ApiResponse<FlashcardDeck[]>> {
     const response = await apiClient.get<ApiResponse<FlashcardDeck[]>>('/flashcard-decks');
+    return response.data;
+  }
+  async createDeck(data: DeckFormDTO): Promise<ApiResponse<FlashcardDeck>> {
+    const response = await apiClient.post<ApiResponse<FlashcardDeck>>('/flashcard-decks/create', data);
     return response.data;
   }
 

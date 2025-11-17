@@ -14,16 +14,32 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Edit, Plus, Trash2,Loader2 } from 'lucide-react';
+import { Edit, Plus, Trash2,Loader2,Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
-import type { FlashcardDeck, Flashcard } from '@/types/type';
+import type { FlashcardDeck, Flashcard,Tag } from '@/types/type';
 import DeckList from '@/components/flashcards/DeckList';
 import CardList from '@/components/flashcards/CardList';
 import StudyMode from '@/components/flashcards/StudyMode';
 import { formatDate, formatDateForInput } from '@/lib/utils';
 
-import { useGetDecks, useGetCards } from '@/hooks/api/use-flashcards';
-
+import { useGetDecks, useGetCards, useCreateDeck } from '@/hooks/api/use-flashcards';
+import { useGetTags } from '@/hooks/api/use-tags'; 
+import { DeckFormDTO } from '@/lib/api/services/flashcard.service'; 
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 const Flashcards = () => {
   // Deck state
   const { data: decksData, isLoading: isLoadingDecks } = useGetDecks();
@@ -36,6 +52,9 @@ const Flashcards = () => {
   const selectedDeckCards = useMemo(() => cardsData || [], [cardsData]);
   
 
+  const { data: allTagsData, isLoading: isLoadingTags } = useGetTags();
+  const allTags = useMemo(() => allTagsData || [], [allTagsData]);
+
   useEffect(() => {
     if (!selectedDeckId && decks.length > 0) {
       setSelectedDeckId(decks[0].id);
@@ -45,6 +64,7 @@ const selectedDeck = useMemo(
     () => decks.find((d) => d.id === selectedDeckId) ?? null,
     [decks, selectedDeckId]
   );
+  const createDeckMutation = useCreateDeck(); // 👈 KHỞI TẠO MUTATION
   // Deck dialogs
   const [creatingDeck, setCreatingDeck] = useState(false);
   const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null);
@@ -52,8 +72,10 @@ const selectedDeck = useMemo(
     title: '',
     description: '',
     isPublic: false,
+    tagIds:[]
   });
 
+  const [popoverOpen, setPopoverOpen] = useState(false);
   // Card dialogs
   const [creatingCard, setCreatingCard] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
@@ -68,7 +90,7 @@ const selectedDeck = useMemo(
 
   // Deck handlers
   const openCreateDeck = () => {
-    setDeckForm({ title: '', description: '', isPublic: false });
+    setDeckForm({ title: '', description: '', isPublic: false ,tagIds: []});
     setCreatingDeck(true);
   };
 
@@ -77,18 +99,16 @@ const selectedDeck = useMemo(
       toast.error('Vui lòng nhập tên bộ thẻ');
       return;
     }
-    const newDeck: FlashcardDeck = {
-      id: `deck_${Date.now()}`,
-      title: deckForm.title.trim(),
-      description: deckForm.description.trim() || undefined,
-      isPublic: deckForm.isPublic,
-      createdAt: new Date().toISOString(),
-      userId: currentUserId,
-    };
-    setDecks((prev) => [...prev, newDeck]);
-    setSelectedDeckId(newDeck.id);
-    setCreatingDeck(false);
-    toast.success('Tạo bộ thẻ thành công!');
+    
+    // Gọi mutation với data từ form
+    createDeckMutation.mutate(deckForm, {
+      onSuccess: (response) => {
+        // response.data là FlashcardDeck mới
+        setSelectedDeckId(response.data.id); // Tự động chọn bộ thẻ mới
+        setCreatingDeck(false); // Đóng dialog
+      },
+      // onError đã được xử lý trong hook
+    });
   };
 
   const openEditDeck = (deck: FlashcardDeck) => {
@@ -97,6 +117,7 @@ const selectedDeck = useMemo(
       title: deck.title,
       description: deck.description ?? '',
       isPublic: deck.isPublic,
+      tagIds:[]
     });
   };
 
@@ -304,6 +325,74 @@ const selectedDeck = useMemo(
                 placeholder="Mô tả ngắn về bộ thẻ"
               />
             </div>
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={popoverOpen}
+                    className="w-full justify-between"
+                    disabled={isLoadingTags}
+                  >
+                    {deckForm.tagIds?.length ?? 0 > 0
+                      ? `Đã chọn ${deckForm.tagIds?.length} tag`
+                      : "Chọn tag..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Tìm tag..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy tag.</CommandEmpty>
+                      <CommandGroup>
+                        {allTags.map((tag) => (
+                          <CommandItem
+                            key={tag.id}
+                            value={tag.name}
+                            onSelect={() => {
+                              const selected = deckForm.tagIds || [];
+                              const isSelected = selected.includes(tag.id);
+                              
+                              setDeckForm(f => ({
+                                ...f,
+                                tagIds: isSelected
+                                  ? selected.filter(id => id !== tag.id) // Bỏ chọn
+                                  : [...selected, tag.id] // Chọn
+                              }));
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                (deckForm.tagIds || []).includes(tag.id)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {tag.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {/* Hiển thị tag đã chọn */}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {deckForm.tagIds?.map((id) => {
+                  const tag = allTags.find(t => t.id === id);
+  
+                  return tag ? (
+                    <Badge key={id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ) : null;
+                })}
+              </div>
+            </div>
             <div className="flex items-center gap-2">
               <Checkbox
                 checked={deckForm.isPublic}
@@ -316,7 +405,9 @@ const selectedDeck = useMemo(
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreatingDeck(false)}>Hủy</Button>
-            <Button onClick={saveCreateDeck} className="bg-primary">Tạo</Button>
+            <Button onClick={saveCreateDeck} className="bg-primary" disabled={createDeckMutation.isPending}>{createDeckMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}Tạo</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
