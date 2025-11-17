@@ -25,7 +25,11 @@ class FlashcardService {
     const response = await apiClient.post<ApiResponse<FlashcardDeck>>('/flashcard-decks/create', data);
     return response.data;
   }
-
+async updateDeck(deckId: string, data: DeckFormDTO): Promise<ApiResponse<FlashcardDeck>> {
+    // Dùng PUT (như bạn yêu cầu)
+    const response = await apiClient.put<ApiResponse<FlashcardDeck>>(`/flashcard-decks/update/${deckId}`, data);
+    return response.data;
+  }
   /**
    * Lấy tất cả thẻ (cards) của một bộ thẻ cụ thể
    */

@@ -1,11 +1,11 @@
-import { useMemo, useState,useEffect } from 'react';
-import Navbar from '@/components/user/layout/Navbar';
-import Footer from '@/components/user/layout/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { useMemo, useState, useEffect } from "react";
+import Navbar from "@/components/user/layout/Navbar";
+import Footer from "@/components/user/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -13,18 +13,30 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Edit, Plus, Trash2,Loader2,Check, ChevronsUpDown } from 'lucide-react';
-import { toast } from 'sonner';
-import type { FlashcardDeck, Flashcard,Tag } from '@/types/type';
-import DeckList from '@/components/flashcards/DeckList';
-import CardList from '@/components/flashcards/CardList';
-import StudyMode from '@/components/flashcards/StudyMode';
-import { formatDate, formatDateForInput } from '@/lib/utils';
+} from "@/components/ui/dialog";
+import {
+  Edit,
+  Plus,
+  Trash2,
+  Loader2,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
+import { toast } from "sonner";
+import type { FlashcardDeck, Flashcard, Tag } from "@/types/type";
+import DeckList from "@/components/flashcards/DeckList";
+import CardList from "@/components/flashcards/CardList";
+import StudyMode from "@/components/flashcards/StudyMode";
+import { formatDate, formatDateForInput } from "@/lib/utils";
 
-import { useGetDecks, useGetCards, useCreateDeck } from '@/hooks/api/use-flashcards';
-import { useGetTags } from '@/hooks/api/use-tags'; 
-import { DeckFormDTO } from '@/lib/api/services/flashcard.service'; 
+import {
+  useGetDecks,
+  useGetCards,
+  useCreateDeck,
+  useUpdateDeck,
+} from "@/hooks/api/use-flashcards";
+import { useGetTags } from "@/hooks/api/use-tags";
+import { DeckFormDTO } from "@/lib/api/services/flashcard.service";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -48,9 +60,9 @@ const Flashcards = () => {
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
 
   // Cards state (only those belonging to user's decks)
-  const { data: cardsData, isLoading: isLoadingCards } = useGetCards(selectedDeckId);
+  const { data: cardsData, isLoading: isLoadingCards } =
+    useGetCards(selectedDeckId);
   const selectedDeckCards = useMemo(() => cardsData || [], [cardsData]);
-  
 
   const { data: allTagsData, isLoading: isLoadingTags } = useGetTags();
   const allTags = useMemo(() => allTagsData || [], [allTagsData]);
@@ -60,19 +72,21 @@ const Flashcards = () => {
       setSelectedDeckId(decks[0].id);
     }
   }, [decks, selectedDeckId]);
-const selectedDeck = useMemo(
+  const selectedDeck = useMemo(
     () => decks.find((d) => d.id === selectedDeckId) ?? null,
     [decks, selectedDeckId]
   );
   const createDeckMutation = useCreateDeck(); // 👈 KHỞI TẠO MUTATION
   // Deck dialogs
+  const updateDeckMutation = useUpdateDeck();
+
   const [creatingDeck, setCreatingDeck] = useState(false);
   const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null);
   const [deckForm, setDeckForm] = useState({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
     isPublic: false,
-    tagIds:[]
+    tagIds: [],
   });
 
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -80,9 +94,9 @@ const selectedDeck = useMemo(
   const [creatingCard, setCreatingCard] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
   const [cardForm, setCardForm] = useState({
-    frontContent: '',
-    backContent: '',
-    exampleSentence: '',
+    frontContent: "",
+    backContent: "",
+    exampleSentence: "",
   });
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
 
@@ -90,16 +104,16 @@ const selectedDeck = useMemo(
 
   // Deck handlers
   const openCreateDeck = () => {
-    setDeckForm({ title: '', description: '', isPublic: false ,tagIds: []});
+    setDeckForm({ title: "", description: "", isPublic: false, tagIds: [] });
     setCreatingDeck(true);
   };
 
   const saveCreateDeck = () => {
     if (!deckForm.title.trim()) {
-      toast.error('Vui lòng nhập tên bộ thẻ');
+      toast.error("Vui lòng nhập tên bộ thẻ");
       return;
     }
-    
+
     // Gọi mutation với data từ form
     createDeckMutation.mutate(deckForm, {
       onSuccess: (response) => {
@@ -112,26 +126,38 @@ const selectedDeck = useMemo(
   };
 
   const openEditDeck = (deck: FlashcardDeck) => {
-    setEditingDeck(deck);
+    setEditingDeck(deck); // Lưu lại deck đang sửa
+
+    // Điền data vào form
     setDeckForm({
       title: deck.title,
-      description: deck.description ?? '',
+      description: deck.description ?? "",
       isPublic: deck.isPublic,
-      tagIds:[]
+      // Chuyển đổi deck.deckTags (từ API) -> tagIds (cho form)
+      tagIds: deck.deckTags.map((deckTag) => deckTag.tag.id),
     });
   };
 
   const saveEditDeck = () => {
-    if (!editingDeck) return;
-    const updated: FlashcardDeck = {
-      ...editingDeck,
-      title: deckForm.title.trim() || editingDeck.title,
-      description: deckForm.description.trim() || undefined,
-      isPublic: deckForm.isPublic,
-    };
-    setDecks((prev) => prev.map((d) => (d.id === updated.id ? updated : d)));
-    setEditingDeck(null);
-    toast.success('Cập nhật bộ thẻ thành công!');
+    if (!editingDeck) return; // Không có deck nào đang được sửa
+
+    if (!deckForm.title.trim()) {
+      toast.error("Vui lòng nhập tên bộ thẻ");
+      return;
+    }
+
+    // Gọi mutation với ID và data từ form
+    updateDeckMutation.mutate(
+      {
+        deckId: editingDeck.id,
+        data: deckForm,
+      },
+      {
+        onSuccess: () => {
+          setEditingDeck(null); // Đóng dialog
+        },
+      }
+    );
   };
 
   const deleteDeck = (deck: FlashcardDeck) => {
@@ -141,23 +167,23 @@ const selectedDeck = useMemo(
       const next = decks.find((d) => d.id !== deck.id)?.id ?? null;
       setSelectedDeckId(next);
     }
-    toast.success('Đã xóa bộ thẻ và các thẻ liên quan!');
+    toast.success("Đã xóa bộ thẻ và các thẻ liên quan!");
   };
 
   // Card handlers
   const openCreateCard = () => {
     if (!selectedDeckId) {
-      toast.error('Hãy chọn một bộ thẻ trước');
+      toast.error("Hãy chọn một bộ thẻ trước");
       return;
     }
-    setCardForm({ frontContent: '', backContent: '', exampleSentence: '' });
+    setCardForm({ frontContent: "", backContent: "", exampleSentence: "" });
     setCreatingCard(true);
   };
 
   const saveCreateCard = () => {
     if (!selectedDeckId) return;
     if (!cardForm.frontContent.trim() || !cardForm.backContent.trim()) {
-      toast.error('Vui lòng nhập mặt trước và mặt sau');
+      toast.error("Vui lòng nhập mặt trước và mặt sau");
       return;
     }
     const newCard: Flashcard = {
@@ -167,12 +193,9 @@ const selectedDeck = useMemo(
       exampleSentence: cardForm.exampleSentence.trim() || undefined,
       deckId: selectedDeckId,
     };
-    setCards((prev) => [
-      ...prev,
-      newCard,
-    ]);
+    setCards((prev) => [...prev, newCard]);
     setCreatingCard(false);
-    toast.success('Tạo thẻ thành công!');
+    toast.success("Tạo thẻ thành công!");
   };
 
   const openEditCard = (card: Flashcard) => {
@@ -180,7 +203,7 @@ const selectedDeck = useMemo(
     setCardForm({
       frontContent: card.frontContent,
       backContent: card.backContent,
-      exampleSentence: card.exampleSentence ?? '',
+      exampleSentence: card.exampleSentence ?? "",
     });
   };
 
@@ -194,12 +217,12 @@ const selectedDeck = useMemo(
     };
     setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     setEditingCard(null);
-    toast.success('Cập nhật thẻ thành công!');
+    toast.success("Cập nhật thẻ thành công!");
   };
 
   const deleteCard = (card: Flashcard) => {
     setCards((prev) => prev.filter((c) => c.id !== card.id));
-    toast.success('Đã xóa thẻ!');
+    toast.success("Đã xóa thẻ!");
   };
 
   return (
@@ -258,16 +281,24 @@ const selectedDeck = useMemo(
               <div className="w-full lg:w-2/3">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-2xl font-semibold">
-                    {selectedDeck ? `Thẻ trong: ${selectedDeck.title}` : 'Chọn một bộ thẻ'}
+                    {selectedDeck
+                      ? `Thẻ trong: ${selectedDeck.title}`
+                      : "Chọn một bộ thẻ"}
                   </h2>
                   <div className="flex items-center gap-2">
-                    <Button onClick={openCreateCard} disabled={!selectedDeckId} className="bg-primary">
+                    <Button
+                      onClick={openCreateCard}
+                      disabled={!selectedDeckId}
+                      className="bg-primary"
+                    >
                       <Plus className="w-4 h-4 mr-2" /> Thêm thẻ
                     </Button>
                     <Button
                       variant="secondary"
                       onClick={() => setStudyDialogOpen(true)}
-                      disabled={!selectedDeckId || selectedDeckCards.length === 0}
+                      disabled={
+                        !selectedDeckId || selectedDeckCards.length === 0
+                      }
                     >
                       Học thẻ
                     </Button>
@@ -306,14 +337,18 @@ const selectedDeck = useMemo(
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Tạo bộ thẻ mới</DialogTitle>
-            <DialogDescription>Nhập thông tin cho bộ thẻ của bạn</DialogDescription>
+            <DialogDescription>
+              Nhập thông tin cho bộ thẻ của bạn
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Tên bộ thẻ *</Label>
               <Input
                 value={deckForm.title}
-                onChange={(e) => setDeckForm((f) => ({ ...f, title: e.target.value }))}
+                onChange={(e) =>
+                  setDeckForm((f) => ({ ...f, title: e.target.value }))
+                }
                 placeholder="Ví dụ: Từ vựng Business English"
               />
             </div>
@@ -321,7 +356,9 @@ const selectedDeck = useMemo(
               <Label>Mô tả</Label>
               <Textarea
                 value={deckForm.description}
-                onChange={(e) => setDeckForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(e) =>
+                  setDeckForm((f) => ({ ...f, description: e.target.value }))
+                }
                 placeholder="Mô tả ngắn về bộ thẻ"
               />
             </div>
@@ -355,12 +392,12 @@ const selectedDeck = useMemo(
                             onSelect={() => {
                               const selected = deckForm.tagIds || [];
                               const isSelected = selected.includes(tag.id);
-                              
-                              setDeckForm(f => ({
+
+                              setDeckForm((f) => ({
                                 ...f,
                                 tagIds: isSelected
-                                  ? selected.filter(id => id !== tag.id) // Bỏ chọn
-                                  : [...selected, tag.id] // Chọn
+                                  ? selected.filter((id) => id !== tag.id) // Bỏ chọn
+                                  : [...selected, tag.id], // Chọn
                               }));
                             }}
                           >
@@ -383,8 +420,8 @@ const selectedDeck = useMemo(
               {/* Hiển thị tag đã chọn */}
               <div className="flex flex-wrap gap-1 pt-1">
                 {deckForm.tagIds?.map((id) => {
-                  const tag = allTags.find(t => t.id === id);
-  
+                  const tag = allTags.find((t) => t.id === id);
+
                   return tag ? (
                     <Badge key={id} variant="secondary">
                       {tag.name}
@@ -404,10 +441,19 @@ const selectedDeck = useMemo(
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreatingDeck(false)}>Hủy</Button>
-            <Button onClick={saveCreateDeck} className="bg-primary" disabled={createDeckMutation.isPending}>{createDeckMutation.isPending && (
+            <Button variant="outline" onClick={() => setCreatingDeck(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={saveCreateDeck}
+              className="bg-primary"
+              disabled={createDeckMutation.isPending}
+            >
+              {createDeckMutation.isPending && (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}Tạo</Button>
+              )}
+              Tạo
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -419,36 +465,129 @@ const selectedDeck = useMemo(
             <DialogTitle>Chỉnh sửa bộ thẻ</DialogTitle>
             <DialogDescription>Cập nhật thông tin bộ thẻ</DialogDescription>
           </DialogHeader>
-          {editingDeck && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tên bộ thẻ *</Label>
-                <Input
-                  value={deckForm.title}
-                  onChange={(e) => setDeckForm((f) => ({ ...f, title: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Mô tả</Label>
-                <Textarea
-                  value={deckForm.description}
-                  onChange={(e) => setDeckForm((f) => ({ ...f, description: e.target.value }))}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={deckForm.isPublic}
-                  onCheckedChange={(checked) =>
-                    setDeckForm((f) => ({ ...f, isPublic: !!checked }))
-                  }
-                />
-                <Label>Bộ thẻ công khai</Label>
+
+          {/* Chúng ta tái sử dụng UI từ Create Deck, 
+            vì `deckForm` đã được `openEditDeck` điền sẵn data
+          */}
+          <div className="space-y-4">
+            {/* Tên bộ thẻ */}
+            <div className="space-y-2">
+              <Label>Tên bộ thẻ *</Label>
+              <Input
+                value={deckForm.title}
+                onChange={(e) =>
+                  setDeckForm((f) => ({ ...f, title: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Mô tả */}
+            <div className="space-y-2">
+              <Label>Mô tả</Label>
+              <Textarea
+                value={deckForm.description}
+                onChange={(e) =>
+                  setDeckForm((f) => ({ ...f, description: e.target.value }))
+                }
+              />
+            </div>
+
+            {/* Chọn Tag (Logic y hệt Create Dialog) */}
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={popoverOpen}
+                    className="w-full justify-between"
+                    disabled={isLoadingTags}
+                  >
+                    {deckForm.tagIds?.length ?? 0 > 0
+                      ? `Đã chọn ${deckForm.tagIds?.length} tag`
+                      : "Chọn tag..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                  <Command>
+                    <CommandInput placeholder="Tìm tag..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy tag.</CommandEmpty>
+                      <CommandGroup>
+                        {allTags.map((tag) => (
+                          <CommandItem
+                            key={tag.id}
+                            value={tag.name}
+                            onSelect={() => {
+                              const selected = deckForm.tagIds || [];
+                              const isSelected = selected.includes(tag.id);
+
+                              setDeckForm((f) => ({
+                                ...f,
+                                tagIds: isSelected
+                                  ? selected.filter((id) => id !== tag.id) // Bỏ chọn
+                                  : [...selected, tag.id], // Chọn
+                              }));
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                (deckForm.tagIds || []).includes(tag.id)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            {tag.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {/* Hiển thị tag đã chọn */}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {deckForm.tagIds?.map((id) => {
+                  const tag = allTags.find((t) => t.id === id);
+
+                  return tag ? (
+                    <Badge key={id} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ) : null;
+                })}
               </div>
             </div>
-          )}
+
+            {/* Checkbox Công khai */}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={deckForm.isPublic}
+                onCheckedChange={(checked) =>
+                  setDeckForm((f) => ({ ...f, isPublic: !!checked }))
+                }
+              />
+              <Label>Bộ thẻ công khai</Label>
+            </div>
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingDeck(null)}>Hủy</Button>
-            <Button onClick={saveEditDeck} className="bg-primary">Lưu</Button>
+            <Button variant="outline" onClick={() => setEditingDeck(null)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={saveEditDeck} // 👈 Gọi hàm `saveEditDeck` mới
+              className="bg-primary"
+              disabled={updateDeckMutation.isPending} // 👈 Vô hiệu hóa khi đang lưu
+            >
+              {updateDeckMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              Lưu
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -465,7 +604,9 @@ const selectedDeck = useMemo(
               <Label>Mặt trước *</Label>
               <Input
                 value={cardForm.frontContent}
-                onChange={(e) => setCardForm((f) => ({ ...f, frontContent: e.target.value }))}
+                onChange={(e) =>
+                  setCardForm((f) => ({ ...f, frontContent: e.target.value }))
+                }
                 placeholder="Từ/cụm từ"
               />
             </div>
@@ -473,7 +614,9 @@ const selectedDeck = useMemo(
               <Label>Mặt sau *</Label>
               <Textarea
                 value={cardForm.backContent}
-                onChange={(e) => setCardForm((f) => ({ ...f, backContent: e.target.value }))}
+                onChange={(e) =>
+                  setCardForm((f) => ({ ...f, backContent: e.target.value }))
+                }
                 placeholder="Định nghĩa/giải thích"
               />
             </div>
@@ -481,14 +624,23 @@ const selectedDeck = useMemo(
               <Label>Câu ví dụ</Label>
               <Textarea
                 value={cardForm.exampleSentence}
-                onChange={(e) => setCardForm((f) => ({ ...f, exampleSentence: e.target.value }))}
+                onChange={(e) =>
+                  setCardForm((f) => ({
+                    ...f,
+                    exampleSentence: e.target.value,
+                  }))
+                }
                 placeholder="Ví dụ sử dụng trong câu"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreatingCard(false)}>Hủy</Button>
-            <Button onClick={saveCreateCard} className="bg-primary">Tạo</Button>
+            <Button variant="outline" onClick={() => setCreatingCard(false)}>
+              Hủy
+            </Button>
+            <Button onClick={saveCreateCard} className="bg-primary">
+              Tạo
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -506,28 +658,41 @@ const selectedDeck = useMemo(
                 <Label>Mặt trước *</Label>
                 <Input
                   value={cardForm.frontContent}
-                  onChange={(e) => setCardForm((f) => ({ ...f, frontContent: e.target.value }))}
+                  onChange={(e) =>
+                    setCardForm((f) => ({ ...f, frontContent: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Mặt sau *</Label>
                 <Textarea
                   value={cardForm.backContent}
-                  onChange={(e) => setCardForm((f) => ({ ...f, backContent: e.target.value }))}
+                  onChange={(e) =>
+                    setCardForm((f) => ({ ...f, backContent: e.target.value }))
+                  }
                 />
               </div>
               <div className="space-y-2">
                 <Label>Câu ví dụ</Label>
                 <Textarea
                   value={cardForm.exampleSentence}
-                  onChange={(e) => setCardForm((f) => ({ ...f, exampleSentence: e.target.value }))}
+                  onChange={(e) =>
+                    setCardForm((f) => ({
+                      ...f,
+                      exampleSentence: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingCard(null)}>Hủy</Button>
-            <Button onClick={saveEditCard} className="bg-primary">Lưu</Button>
+            <Button variant="outline" onClick={() => setEditingCard(null)}>
+              Hủy
+            </Button>
+            <Button onClick={saveEditCard} className="bg-primary">
+              Lưu
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -33,6 +33,25 @@ export const useCreateDeck = () => {
     },
   });
 };
+export const useUpdateDeck = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // mutationFn nhận vào object chứa deckId và data
+    mutationFn: ({ deckId, data }: { deckId: string; data: DeckFormDTO }) =>
+      flashcardService.updateDeck(deckId, data),
+    
+    onSuccess: () => {
+      // Fetch lại danh sách decks sau khi cập nhật thành công
+      queryClient.invalidateQueries({ queryKey: flashcardKeys.allDecks });
+      toast.success('Cập nhật bộ thẻ thành công!');
+    },
+    onError: (error:any) => {
+    
+      const message = error.response?.data?.message || "Cập nhật thất bại";
+      toast.error(message);
+    },
+  });
+};
 
 /**
  * Hook 2: Fetch các thẻ (cards) khi biết deckId
