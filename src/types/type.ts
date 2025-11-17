@@ -1,5 +1,9 @@
 // Admin Types based on Prisma Schema
 
+export enum FlashcardStatus {
+  LEARNING = 'LEARNING',
+  REVIEW = 'REVIEW',
+}
 export interface User {
   id: string;
   email: string;
@@ -242,6 +246,7 @@ export interface FlashcardDeck {
   description?: string;
   isPublic: boolean;
   userId: string;
+  deckTags: DeckTag[];
 }
 
 export interface Flashcard {
@@ -251,4 +256,22 @@ export interface Flashcard {
   exampleSentence?: string;
   audioUrl?: string;
   deckId: string;
+}
+export interface Tag {
+  id: string;
+  name: string;
+}
+export interface DeckTag {
+  tag: Tag;
+ 
+}
+export interface UserFlashcardProgress {
+  userId: string;
+  flashcardId: string;
+  status: FlashcardStatus; // ('LEARNING' | 'REVIEW')
+  nextReviewAt: string; // ISO String (DateTime)
+  repetitions: number; // int
+  easeFactor: number; // float
+  interval: number; // int (số ngày)
+  learningStep: number; // int
 }

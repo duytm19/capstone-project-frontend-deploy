@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState,useEffect } from 'react';
 import Navbar from '@/components/user/layout/Navbar';
 import Footer from '@/components/user/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -14,43 +14,37 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2,Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  FlashcardDeck,
-  Flashcard,
-  mockFlashcardDecks,
-  mockFlashcards,
-} from '@/data/mock';
+import type { FlashcardDeck, Flashcard } from '@/types/type';
 import DeckList from '@/components/flashcards/DeckList';
 import CardList from '@/components/flashcards/CardList';
 import StudyMode from '@/components/flashcards/StudyMode';
+import { formatDate, formatDateForInput } from '@/lib/utils';
 
-const currentUserId = (typeof window !== 'undefined' ? localStorage.getItem('currentUserId') : null) ?? '1';
+import { useGetDecks, useGetCards } from '@/hooks/api/use-flashcards';
 
 const Flashcards = () => {
   // Deck state
-  const [decks, setDecks] = useState<FlashcardDeck[]>(
-    mockFlashcardDecks.filter((d) => d.userId === currentUserId)
-  );
-  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(
-    decks[0]?.id ?? null
-  );
+  const { data: decksData, isLoading: isLoadingDecks } = useGetDecks();
+  const decks = useMemo(() => decksData || [], [decksData]);
+
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
 
   // Cards state (only those belonging to user's decks)
-  const userDeckIds = useMemo(() => decks.map((d) => d.id), [decks]);
-  const [cards, setCards] = useState<Flashcard[]>(
-    mockFlashcards.filter((c) => userDeckIds.includes(c.deckId))
-  );
-  const selectedDeck = useMemo(
+  const { data: cardsData, isLoading: isLoadingCards } = useGetCards(selectedDeckId);
+  const selectedDeckCards = useMemo(() => cardsData || [], [cardsData]);
+  
+
+  useEffect(() => {
+    if (!selectedDeckId && decks.length > 0) {
+      setSelectedDeckId(decks[0].id);
+    }
+  }, [decks, selectedDeckId]);
+const selectedDeck = useMemo(
     () => decks.find((d) => d.id === selectedDeckId) ?? null,
     [decks, selectedDeckId]
   );
-  const selectedDeckCards = useMemo(
-    () => cards.filter((c) => c.deckId === selectedDeckId),
-    [cards, selectedDeckId]
-  );
-
   // Deck dialogs
   const [creatingDeck, setCreatingDeck] = useState(false);
   const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null);
@@ -71,12 +65,6 @@ const Flashcards = () => {
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
 
   // Helpers
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
 
   // Deck handlers
   const openCreateDeck = () => {
@@ -225,9 +213,13 @@ const Flashcards = () => {
                   </Button>
                 </div>
 
-                {decks.length > 0 ? (
+                {isLoadingDecks ? (
+                  <div className="flex justify-center p-10 border rounded-xl">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  </div>
+                ) : decks.length > 0 ? (
                   <DeckList
-                    decks={decks}
+                    decks={decks} // Truyền data đã fetch
                     selectedDeckId={selectedDeckId}
                     onSelectDeck={setSelectedDeckId}
                     onEditDeck={openEditDeck}
@@ -262,9 +254,13 @@ const Flashcards = () => {
                 </div>
 
                 {selectedDeckId ? (
-                  selectedDeckCards.length > 0 ? (
+                  isLoadingCards ? (
+                    <div className="flex justify-center p-10 border rounded-xl">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    </div>
+                  ) : selectedDeckCards.length > 0 ? (
                     <CardList
-                      cards={selectedDeckCards}
+                      cards={selectedDeckCards} // Truyền data đã fetch
                       onEditCard={openEditCard}
                       onDeleteCard={deleteCard}
                     />
@@ -449,8 +445,8 @@ const Flashcards = () => {
       <Dialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <StudyMode
-            cards={selectedDeckCards}
-            userId={currentUserId}
+            //cards={selectedDeckCards}
+            deckId={selectedDeckId}
             onClose={() => setStudyDialogOpen(false)}
           />
         </DialogContent>
