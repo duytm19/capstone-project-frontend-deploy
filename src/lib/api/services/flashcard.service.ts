@@ -17,6 +17,12 @@ export interface DeckFormDTO {
   isPublic: boolean;
   tagIds?: string[]; // 👈 THÊM DÒNG NÀY
 }
+export interface CardFormDTO {
+  frontContent: string;
+  backContent: string;
+  exampleSentence?: string;
+  deckId: string; // Cần thiết khi TẠO
+}
 class FlashcardService {
   /**
    * Lấy tất cả bộ thẻ (decks) của user đang đăng nhập
@@ -59,6 +65,19 @@ class FlashcardService {
     return response.data;
   }
 
+  async createCard(data: CardFormDTO): Promise<ApiResponse<Flashcard>> {
+    const response = await apiClient.post<ApiResponse<Flashcard>>('/flashcards/create', data);
+    return response.data;
+  }
+  async updateCard(cardId: string, data: Partial<CardFormDTO>): Promise<ApiResponse<Flashcard>> {
+    // Chúng ta dùng Partial<CardFormDTO> vì không cần gửi deckId khi cập nhật
+    const response = await apiClient.put<ApiResponse<Flashcard>>(`/flashcards/update/${cardId}`, data);
+    return response.data;
+  }
+  async deleteCard(cardId: string): Promise<ApiResponse<EmptyResponse>> {
+    const response = await apiClient.delete(`/flashcards/delete/${cardId}`);
+    return response.data;
+  }
   /**
    * Lấy tiến độ học của tất cả thẻ trong một bộ (cho StudyMode)
    */

@@ -1,5 +1,5 @@
 import { useQuery,useQueryClient,useMutation } from '@tanstack/react-query';
-import { flashcardService, type SubmitReviewDTO, type DeckFormDTO } from '@/lib/api/services/flashcard.service';
+import { flashcardService, type SubmitReviewDTO, type DeckFormDTO, type CardFormDTO, } from '@/lib/api/services/flashcard.service';
 
 import { toast } from 'sonner';
 // Tạo key factory giúp quản lý key nhất quán
@@ -85,7 +85,63 @@ export const useGetCards = (deckId: string | null) => {
     enabled: !!deckId, 
   });
 };
-
+export const useCreateCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CardFormDTO) => flashcardService.createCard(data),
+    
+    onSuccess: (response) => {
+      // `response.data` là Flashcard mới
+      const deckId = response.data.deckId;
+      // Fetch lại danh sách thẻ của bộ này
+      queryClient.invalidateQueries({ queryKey: flashcardKeys.cardsByDeck(deckId) });
+      toast.success('Tạo thẻ thành công!');
+    },
+    onError: (error:any) => {
+   
+      const message = error.response?.data?.message || "Tạo thẻ thất bại";
+      toast.error(message);
+    },
+  });
+};
+export const useUpdateCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ cardId, data }: { cardId: string; data: Partial<CardFormDTO> }) =>
+      flashcardService.updateCard(cardId, data),
+    
+    onSuccess: (response) => {
+      const deckId = response.data.deckId;
+      // Fetch lại danh sách thẻ của bộ này
+      queryClient.invalidateQueries({ queryKey: flashcardKeys.cardsByDeck(deckId) });
+      toast.success('Cập nhật thẻ thành công!');
+    },
+    onError: (error:any) => {
+      const message = error.response?.data?.message || "Cập nhật thẻ thất bại";
+      toast.error(message);
+    },
+  });
+};
+export const useDeleteCard = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    // Quan trọng: Chúng ta cần `deckId` để invalidate cache
+    mutationFn: ({ cardId, deckId }: { cardId: string; deckId: string }) => 
+      flashcardService.deleteCard(cardId),
+    
+    onSuccess: (_, variables) => { // `variables` là object { cardId, deckId }
+      const { deckId } = variables;
+      // Fetch lại danh sách thẻ của bộ này
+      queryClient.invalidateQueries({ queryKey: flashcardKeys.cardsByDeck(deckId) });
+      toast.success('Đã xóa thẻ!');
+    },
+    onError: (error:any) => {
+   
+      const message = error.response?.data?.message || "Xóa thẻ thất bại";
+      toast.error(message);
+    },
+  });
+};
 /**
  * Hook 3: Fetch tiến độ học (cho StudyMode) khi biết deckId
  */

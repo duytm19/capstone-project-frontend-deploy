@@ -45,9 +45,12 @@ import {
   useCreateDeck,
   useUpdateDeck,
   useDeleteDeck,
+  useCreateCard,
+  useUpdateCard,
+  useDeleteCard
 } from "@/hooks/api/use-flashcards";
 import { useGetTags } from "@/hooks/api/use-tags";
-import { DeckFormDTO } from "@/lib/api/services/flashcard.service";
+import { DeckFormDTO, CardFormDTO } from "@/lib/api/services/flashcard.service";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -92,6 +95,11 @@ const Flashcards = () => {
   const updateDeckMutation = useUpdateDeck();
   const deleteDeckMutation = useDeleteDeck(); // 👈 KHỞI TẠO
 
+// 👈 THÊM: Khởi tạo card mutations
+  const createCardMutation = useCreateCard();
+  const updateCardMutation = useUpdateCard();
+  const deleteCardMutation = useDeleteCard();
+
   const [creatingDeck, setCreatingDeck] = useState(false);
   const [editingDeck, setEditingDeck] = useState<FlashcardDeck | null>(null);
   const [deletingDeck, setDeletingDeck] = useState<FlashcardDeck | null>(null);
@@ -106,10 +114,11 @@ const Flashcards = () => {
   // Card dialogs
   const [creatingCard, setCreatingCard] = useState(false);
   const [editingCard, setEditingCard] = useState<Flashcard | null>(null);
-  const [cardForm, setCardForm] = useState({
-    frontContent: "",
-    backContent: "",
-    exampleSentence: "",
+  const [deletingCard, setDeletingCard] = useState<Flashcard | null>(null);
+const [cardForm, setCardForm] = useState<Omit<CardFormDTO, 'deckId'>>({
+    frontContent: '',
+    backContent: '',
+    exampleSentence: '',
   });
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
 
@@ -200,60 +209,73 @@ const Flashcards = () => {
   };
 
   // Card handlers
-  const openCreateCard = () => {
+ const openCreateCard = () => {
     if (!selectedDeckId) {
-      toast.error("Hãy chọn một bộ thẻ trước");
+      toast.error('Hãy chọn một bộ thẻ trước');
       return;
     }
-    setCardForm({ frontContent: "", backContent: "", exampleSentence: "" });
+    setCardForm({ frontContent: '', backContent: '', exampleSentence: '' });
     setCreatingCard(true);
   };
 
   const saveCreateCard = () => {
     if (!selectedDeckId) return;
     if (!cardForm.frontContent.trim() || !cardForm.backContent.trim()) {
-      toast.error("Vui lòng nhập mặt trước và mặt sau");
+      toast.error('Vui lòng nhập mặt trước và mặt sau');
       return;
     }
-    const newCard: Flashcard = {
-      id: `fc_${Date.now()}`,
-      frontContent: cardForm.frontContent.trim(),
-      backContent: cardForm.backContent.trim(),
-      exampleSentence: cardForm.exampleSentence.trim() || undefined,
-      deckId: selectedDeckId,
-    };
-    setCards((prev) => [...prev, newCard]);
-    setCreatingCard(false);
-    toast.success("Tạo thẻ thành công!");
+    
+    createCardMutation.mutate({
+      ...cardForm,
+      deckId: selectedDeckId, // Thêm deckId lúc submit
+    }, {
+      onSuccess: () => {
+        setCreatingCard(false); // Đóng dialog
+      }
+    });
   };
-
   const openEditCard = (card: Flashcard) => {
-    setEditingCard(card);
+    setEditingCard(card); // Lưu lại thẻ đang sửa
     setCardForm({
       frontContent: card.frontContent,
       backContent: card.backContent,
-      exampleSentence: card.exampleSentence ?? "",
+      exampleSentence: card.exampleSentence ?? '',
     });
   };
 
   const saveEditCard = () => {
     if (!editingCard) return;
-    const updated: Flashcard = {
-      ...editingCard,
-      frontContent: cardForm.frontContent.trim() || editingCard.frontContent,
-      backContent: cardForm.backContent.trim() || editingCard.backContent,
-      exampleSentence: cardForm.exampleSentence.trim() || undefined,
-    };
-    setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
-    setEditingCard(null);
-    toast.success("Cập nhật thẻ thành công!");
+
+    if (!cardForm.frontContent.trim() || !cardForm.backContent.trim()) {
+      toast.error('Vui lòng nhập mặt trước và mặt sau');
+      return;
+    }
+
+    updateCardMutation.mutate({
+      cardId: editingCard.id,
+      data: cardForm // Gửi data từ form
+    }, {
+      onSuccess: () => {
+        setEditingCard(null); // Đóng dialog
+      }
+    });
   };
 
   const deleteCard = (card: Flashcard) => {
-    setCards((prev) => prev.filter((c) => c.id !== card.id));
-    toast.success("Đã xóa thẻ!");
+    setDeletingCard(card); // 👈 Chỉ mở dialog
   };
+  const handleConfirmDeleteCard = () => {
+    if (!deletingCard || !selectedDeckId) return;
 
+    deleteCardMutation.mutate({
+      cardId: deletingCard.id,
+      deckId: selectedDeckId, // 👈 Cần deckId để invalidate cache
+    }, {
+      onSuccess: () => {
+        setDeletingCard(null); // Đóng dialog
+      }
+    });
+  };
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -701,7 +723,7 @@ const Flashcards = () => {
             <Button variant="outline" onClick={() => setCreatingCard(false)}>
               Hủy
             </Button>
-            <Button onClick={saveCreateCard} className="bg-primary">
+            <Button onClick={saveCreateCard} className="bg-primary" disabled={createCardMutation.isPending}>
               Tạo
             </Button>
           </DialogFooter>
@@ -753,13 +775,39 @@ const Flashcards = () => {
             <Button variant="outline" onClick={() => setEditingCard(null)}>
               Hủy
             </Button>
-            <Button onClick={saveEditCard} className="bg-primary">
+            <Button onClick={saveEditCard} className="bg-primary" disabled={createCardMutation.isPending}>
               Lưu
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
+<AlertDialog open={!!deletingCard} onOpenChange={(isOpen) => !isOpen && setDeletingCard(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bạn có chắc chắn muốn xóa?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Hành động này không thể hoàn tác. Thao tác này sẽ xóa vĩnh viễn thẻ
+              <strong className="text-foreground"> {deletingCard?.frontContent} </strong>
+              khỏi bộ thẻ.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingCard(null)}>
+              Hủy
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleConfirmDeleteCard} // 👈 Gọi hàm mới
+              disabled={deleteCardMutation.isPending} // 👈 Vô hiệu hóa
+            >
+              {deleteCardMutation.isPending && (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              )}
+              Tiếp tục xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {/* Study Mode Dialog */}
       <Dialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
