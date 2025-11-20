@@ -19,9 +19,9 @@ import Notifications from "./pages/user/account/Notifications";
 import MyCourses from "./pages/user/courses/MyCourses";
 
 // Admin pages
-import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
-import UsersManagement from "./pages/admin/management/UsersManagement";
-import CoursesManagement from "./pages/admin/management/CoursesManagement";
+import AdminDashboard from "./pages/admin/dashboard/Dashboard";
+import UsersManagement from "./pages/admin/management/user/Users";
+import CoursesManagement from "./pages/admin/management/course/Courses";
 import ApplicationsManagement from "./pages/admin/management/ApplicationsManagement";
 import ReportsManagement from "./pages/admin/management/ReportsManagement";
 import NotificationsManagement from "./pages/admin/management/NotificationsManagement";
@@ -29,6 +29,8 @@ import TransactionsManagement from "./pages/admin/finance/TransactionsManagement
 import RevenueManagement from "./pages/admin/finance/RevenueManagement";
 import SubscriptionPlansManagement from "./pages/admin/finance/SubscriptionPlansManagement";
 import SubscriptionContractsManagement from "./pages/admin/finance/SubscriptionContractsManagement";
+import AdminCourseDetail from "./pages/admin/management/course/CourseDetail";
+import AdminLessonDetail from "./pages/admin/management/course/LessonDetail";
 
 // Protected Routes
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -95,6 +97,8 @@ const App = () => (
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<UsersManagement />} />
             <Route path="courses" element={<CoursesManagement />} />
+            <Route path="courses/:id" element={<AdminCourseDetail />} />
+            <Route path="lessons/:lessonId" element={<AdminLessonDetail />} />
             <Route path="transactions" element={<TransactionsManagement />} />
             <Route path="applications" element={<ApplicationsManagement />} />
             <Route path="reports" element={<ReportsManagement />} />
