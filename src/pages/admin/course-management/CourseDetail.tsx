@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
-import { courseManagementService } from "@/lib/api/services";
-import type { UpdateCourseRequest } from "@/lib/api/services";
+import { courseManagementService } from "@/lib/api/services/admin";
+import type { UpdateCourseRequest } from "@/lib/api/services/admin";
 import { CourseWithStats, CourseStatus, CourseLevel } from "@/types/type";
 import {
   Select,
@@ -332,7 +332,7 @@ export default function AdminCourseDetail() {
                     >
                       Lưu thay đổi
                     </Button>
-                    <Button
+                    {/* <Button
                       variant="outline"
                       onClick={() =>
                         setEditCourse({
@@ -345,7 +345,7 @@ export default function AdminCourseDetail() {
                       }
                     >
                       Hoàn nguyên
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               )}

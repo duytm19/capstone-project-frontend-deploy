@@ -20,7 +20,7 @@ import {
   Pencil
 } from 'lucide-react';
 import { Course, CourseWithStats, CourseStatus } from '@/types/type';
-import { courseManagementService } from '@/lib/api/services';
+import { courseManagementService } from '@/lib/api/services/admin';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
 
