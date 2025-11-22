@@ -78,6 +78,22 @@ class CourseManagementService {
     //router.delete('/:courseId/lessons/:lessonId/comments/:commentId', courseManagementController.deleteComment);
     return response.data
   }
+
+  async uploadLessonVideo(courseId: string, lessonId: string, file: File): Promise<ApiResponse<{ url: string }>> {
+    const formData = new FormData()
+    formData.append('video', file)
+
+    const response = await apiClient.post<ApiResponse<{ url: string }>>(
+      `/admin/courses/${courseId}/lessons/${lessonId}/upload-video`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    )
+    return response.data
+  }
 }
 
 export const courseManagementService = new CourseManagementService()

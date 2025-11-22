@@ -2,222 +2,206 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Flashcard } from '@/types/type';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockUserFlashcardProgress } from '@/data/mock';
+import { Loader2, Volume2, Check, RotateCw } from 'lucide-react'; // Thêm icon RotateCw
+import { toast } from 'sonner';
 
-type FlashcardProgress = {
-  userId: string;
-  flashcardId: string;
-  status: 'LEARNING' | 'REVIEW';
-  nextReviewAt: string; // ISO
-  repetitions: number;
-  learningStep: number;
-  easeFactor: number; // SM-2 EF
-  interval: number; // days
-};
+import { useGetReviewQueue, useSubmitReview } from '@/hooks/api/use-flashcards';
+import type { ReviewQuality } from '@/lib/api/services/flashcard.service';
 
 interface StudyModeProps {
-  cards: Flashcard[];
-  userId: string;
+  deckId: string;
   onClose: () => void;
 }
 
-const STORAGE_KEY_PREFIX = 'skillboost_flashcard_progress_v1_';
+const gradeToQualityMap: Record<string, ReviewQuality> = {
+  again: 1, hard: 3, good: 4, easy: 5,
+};
 
-function loadProgress(userId: string): Record<string, FlashcardProgress> {
+const playAudio = (audioUrl: string, e?: React.MouseEvent) => {
+  if (e) e.stopPropagation();
   try {
-    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${userId}`);
-    const stored: Record<string, FlashcardProgress> = raw ? JSON.parse(raw) : {};
-    // Seed from mock if empty
-    if (!stored || Object.keys(stored).length === 0) {
-      const seed = mockUserFlashcardProgress
-        .filter((p) => p.userId === userId)
-        .reduce((acc, p) => {
-          acc[p.flashcardId] = { ...p } as FlashcardProgress;
-          return acc;
-        }, {} as Record<string, FlashcardProgress>);
-      return seed;
-    }
-    return stored;
-  } catch {
-    return {};
+    const audio = new Audio(audioUrl);
+    audio.play();
+  } catch (err) {
+    console.error(err);
   }
-}
+};
 
-function saveProgress(userId: string, map: Record<string, FlashcardProgress>) {
-  try {
-    localStorage.setItem(`${STORAGE_KEY_PREFIX}${userId}`, JSON.stringify(map));
-  } catch {
-    // ignore
-  }
-}
+export default function StudyMode({ deckId, onClose }: StudyModeProps) {
+  const { data: queueData, isLoading: isLoadingQueue } = useGetReviewQueue(deckId);
+  const submitReviewMutation = useSubmitReview();
 
-type Grade = 'again' | 'hard' | 'good' | 'easy';
-
-function scheduleNext(now: Date, grade: Grade, prev?: FlashcardProgress): FlashcardProgress {
-  const baseEF = prev?.easeFactor ?? 2.5;
-  const baseRep = prev?.repetitions ?? 0;
-  const baseInterval = prev?.interval ?? 0;
-
-  let EF = baseEF;
-  let repetitions = baseRep;
-  let intervalDays = baseInterval;
-  let status: FlashcardProgress['status'] = 'LEARNING';
-
-  switch (grade) {
-    case 'again':
-      EF = Math.max(1.3, EF - 0.2);
-      repetitions = 0;
-      intervalDays = 0; // review soon
-      status = 'LEARNING';
-      break;
-    case 'hard':
-      EF = Math.max(1.3, EF - 0.15);
-      repetitions = baseRep + 1;
-      intervalDays = Math.max(1, Math.round((baseInterval || 1))); // 1 day
-      status = 'REVIEW';
-      break;
-    case 'good':
-      EF = Math.max(1.3, EF);
-      repetitions = baseRep + 1;
-      intervalDays = baseInterval > 0 ? Math.round(baseInterval * EF) : 2; // 2 days
-      status = 'REVIEW';
-      break;
-    case 'easy':
-      EF = EF + 0.1;
-      repetitions = baseRep + 1;
-      intervalDays = baseInterval > 0 ? Math.round(baseInterval * EF) : 4; // 4 days
-      status = 'REVIEW';
-      break;
-  }
-
-  const nextReviewAt = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString();
-  return {
-    userId: prev?.userId ?? '',
-    flashcardId: prev?.flashcardId ?? '',
-    status,
-    nextReviewAt,
-    repetitions,
-    learningStep: (prev?.learningStep ?? 0) + 1,
-    easeFactor: EF,
-    interval: intervalDays,
-  };
-}
-
-export default function StudyMode({ cards, userId, onClose }: StudyModeProps) {
-  const [progressMap, setProgressMap] = useState<Record<string, FlashcardProgress>>(() => loadProgress(userId));
-  const now = useMemo(() => new Date(), []);
-
-  const dueCards = useMemo(() => {
-    const list = cards.filter((c) => {
-      const p = progressMap[c.id];
-      if (!p) return true; // new card
-      return new Date(p.nextReviewAt) <= now;
-    });
-    return list;
-  }, [cards, progressMap, now]);
-
-  const [queue, setQueue] = useState<Flashcard[]>(dueCards);
+  const [sessionQueue, setSessionQueue] = useState<Flashcard[]>([]);
   const [idx, setIdx] = useState(0);
   const [showBack, setShowBack] = useState(false);
 
   useEffect(() => {
-    setQueue(dueCards);
-    setIdx(0);
-    setShowBack(false);
-  }, [dueCards]);
+    if (queueData) {
+      setSessionQueue(queueData);
+      setIdx(0);
+      setShowBack(false);
+    }
+  }, [queueData]);
 
-  useEffect(() => {
-    saveProgress(userId, progressMap);
-  }, [userId, progressMap]);
+  const currentCard = sessionQueue[idx];
 
-  const current = queue[idx];
-  const total = queue.length;
-
-  const onGrade = (grade: Grade) => {
-    if (!current) return;
-    const prev = progressMap[current.id] ?? {
-      userId,
-      flashcardId: current.id,
-      status: 'LEARNING',
-      nextReviewAt: now.toISOString(),
-      repetitions: 0,
-      learningStep: 0,
-      easeFactor: 2.5,
-      interval: 0,
+  const stats = useMemo(() => {
+    const remainingCards = sessionQueue.slice(idx);
+    return {
+      new: remainingCards.filter(c => c.queueType === 'NEW').length,
+      learning: remainingCards.filter(c => c.queueType === 'LEARNING').length,
+      review: remainingCards.filter(c => c.queueType === 'REVIEW').length,
     };
-    const next = scheduleNext(new Date(), grade, prev);
-    setProgressMap((pm) => ({ ...pm, [current.id]: next }));
+  }, [sessionQueue, idx]);
 
-    // For 'again', re-queue the card at the end; otherwise move forward
+  const onGrade = (grade: 'again' | 'hard' | 'good' | 'easy') => {
+    if (!currentCard || submitReviewMutation.isPending) return;
+
+    const quality = gradeToQualityMap[grade];
+    if (!quality) return;
+
+    submitReviewMutation.mutate({
+      flashcardId: currentCard.id,
+      deckId: deckId,
+      data: { quality },
+    });
+
     if (grade === 'again') {
-      setQueue((q) => {
-        const copy = [...q];
-        copy.push(current);
-        return copy;
-      });
+      setSessionQueue((q) => [...q, { ...currentCard, queueType: 'LEARNING' as const }]);
     }
 
+    // Quan trọng: Đợi 300ms để hiệu ứng lật về (nếu muốn) hoặc reset ngay
     setShowBack(false);
-    setIdx((i) => (i + 1 < total ? i + 1 : i + 1));
+    setIdx((i) => i + 1);
   };
 
-  const finished = idx >= total || total === 0;
+  const renderStatusBadge = (type?: string) => {
+    switch (type) {
+      case 'NEW': return <Badge className="bg-blue-500 hover:bg-blue-600 absolute top-4 left-4 z-10">Mới</Badge>;
+      case 'LEARNING': return <Badge className="bg-orange-500 hover:bg-orange-600 absolute top-4 left-4 z-10">Đang học</Badge>;
+      case 'REVIEW': return <Badge className="bg-green-500 hover:bg-green-600 absolute top-4 left-4 z-10">Ôn tập</Badge>;
+      default: return <Badge variant="secondary" className="absolute top-4 left-4 z-10">Khác</Badge>;
+    }
+  };
+
+  const finished = !currentCard || idx >= sessionQueue.length;
+
+  if (isLoadingQueue) return <div className="flex justify-center p-10"><Loader2 className="animate-spin" /></div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-semibold">Chế độ học flashcard</h3>
-          <p className="text-sm text-muted-foreground">
-            {finished ? 'Đã hoàn thành phiên học' : `Thẻ ${idx + 1} / ${total}`}
-          </p>
+    <div className="space-y-4 max-w-2xl mx-auto">
+      {/* HEADER THỐNG KÊ */}
+      <div className="flex flex-col gap-2 pb-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Đang học</h3>
+          <div className="flex gap-3 text-sm font-medium">
+            <span className="text-blue-600">{stats.new} Mới</span>
+            <span className="text-orange-600">{stats.learning} Đang học</span>
+            <span className="text-green-600">{stats.review} Ôn tập</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline">Đến hạn: {dueCards.length}</Badge>
-          <Button variant="outline" onClick={onClose}>Đóng</Button>
+        <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${(idx / sessionQueue.length) * 100}%` }}
+          />
         </div>
       </div>
 
-      {!finished && current ? (
-        <div className="border border-border rounded-2xl p-6">
-          <div className="min-h-[160px]">
-            {!showBack ? (
-              <div>
-                <div className="text-2xl font-bold">{current.frontContent}</div>
-                {current.audioUrl && (
-                  <audio controls className="mt-3 w-full">
-                    <source src={current.audioUrl} />
-                  </audio>
+      {!finished && currentCard ? (
+        <div className="space-y-6">
+          
+          {/* === KHUNG THẺ LẬT 3D === */}
+          <div className="flip-card cursor-pointer group" onClick={() => setShowBack(!showBack)}>
+            <div className={`flip-card-inner ${showBack ? 'flipped' : ''}`}>
+              
+              {/* --- MẶT TRƯỚC --- */}
+              <div className="flip-card-front relative">
+                {renderStatusBadge(currentCard.queueType)}
+                
+                {/* Icon loa mặt trước */}
+                {currentCard.audioUrl && (
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-4 right-4 rounded-full hover:bg-primary/10 z-20" 
+                    onClick={(e) => playAudio(currentCard.audioUrl!, e)}
+                  >
+                    <Volume2 className="w-6 h-6 text-primary" />
+                  </Button>
                 )}
-              </div>
-            ) : (
-              <div>
-                <div className="text-lg font-medium">{current.backContent}</div>
-                {current.exampleSentence && (
-                  <p className="text-sm text-muted-foreground mt-2 italic">{current.exampleSentence}</p>
-                )}
-              </div>
-            )}
-          </div>
 
-          <div className="flex items-center gap-3 mt-6">
-            <Button variant="outline" onClick={() => setShowBack((s) => !s)}>
-              {showBack ? 'Xem mặt trước' : 'Lật thẻ'}
-            </Button>
-            <div className="ml-auto flex items-center gap-2">
-              <Button variant="destructive" onClick={() => onGrade('again')}>Chưa nhớ</Button>
-              <Button variant="outline" onClick={() => onGrade('hard')}>Khó</Button>
-              <Button className="bg-primary" onClick={() => onGrade('good')}>Tốt</Button>
-              <Button className="bg-secondary text-secondary-foreground" onClick={() => onGrade('easy')}>Dễ</Button>
+                {/* Nội dung chính */}
+                <div className="flex flex-col items-center gap-4">
+                  <h2 className="text-3xl font-bold text-center break-words px-4">
+                    {currentCard.frontContent}
+                  </h2>
+                  <p className="text-sm text-muted-foreground absolute bottom-4 flex items-center gap-1 animate-pulse">
+                    <RotateCw className="w-3 h-3" /> Chạm để lật
+                  </p>
+                </div>
+              </div>
+
+              {/* --- MẶT SAU --- */}
+              <div className="flip-card-back relative">
+                {/* Nội dung mặt sau */}
+                <div className="flex flex-col items-center gap-4 w-full px-4 overflow-y-auto max-h-full">
+                  {/* Nhắc lại câu hỏi nhỏ ở trên */}
+                  <div className="text-sm text-muted-foreground border-b pb-2 mb-2 w-full text-center">
+                    {currentCard.frontContent}
+                  </div>
+
+                  <h2 className="text-2xl font-bold text-primary text-center">
+                    {currentCard.backContent}
+                  </h2>
+
+                  {currentCard.exampleSentence && (
+                    <div className="mt-2 p-3 bg-muted/50 rounded-lg text-base italic text-muted-foreground text-center">
+                      "{currentCard.exampleSentence}"
+                    </div>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
+
+          {/* === NÚT ĐÁNH GIÁ (Chỉ hiện khi đã lật) === */}
+          <div className="grid grid-cols-4 gap-3 mt-4">
+            <Button variant="destructive" className="h-12 flex flex-col gap-0.5" onClick={() => onGrade('again')} disabled={submitReviewMutation.isPending}>
+              <span className="font-bold">Quên</span>
+              <span className="text-[10px] font-normal opacity-80">&lt; 1p</span>
+            </Button>
+            <Button variant="outline" className="h-12 flex flex-col gap-0.5 border-orange-200 text-orange-700 hover:bg-orange-50" onClick={() => onGrade('hard')} disabled={submitReviewMutation.isPending}>
+              <span className="font-bold">Khó</span>
+              <span className="text-[10px] font-normal opacity-80">~2d</span>
+            </Button>
+            <Button className="h-12 flex flex-col gap-0.5 bg-blue-600 hover:bg-blue-700" onClick={() => onGrade('good')} disabled={submitReviewMutation.isPending}>
+              <span className="font-bold">Được</span>
+              <span className="text-[10px] font-normal opacity-80">~4d</span>
+            </Button>
+            <Button className="h-12 flex flex-col gap-0.5 bg-green-600 hover:bg-green-700" onClick={() => onGrade('easy')} disabled={submitReviewMutation.isPending}>
+              <span className="font-bold">Dễ</span>
+              <span className="text-[10px] font-normal opacity-80">~7d</span>
+            </Button>
+          </div>
+
         </div>
       ) : (
-        <div className="border border-border rounded-2xl p-6 text-center">
-          <p className="text-muted-foreground">Không có thẻ đến hạn hoặc bạn đã hoàn thành phiên học.</p>
-          <div className="mt-4">
-            <Button className="bg-primary" onClick={onClose}>Đóng</Button>
+        /* MÀN HÌNH KẾT THÚC */
+        <div className="border border-border rounded-2xl p-12 text-center space-y-6 bg-card shadow-sm mt-8">
+          <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto animate-in zoom-in duration-300">
+            <Check className="w-10 h-10" />
           </div>
+          <div className="space-y-2">
+            <h3 className="text-2xl font-bold">Hoàn thành xuất sắc!</h3>
+            <p className="text-muted-foreground text-lg">
+              Bạn đã hoàn thành tất cả thẻ cần học trong phiên này.
+            </p>
+          </div>
+          <Button size="lg" className="bg-primary w-full max-w-xs text-lg" onClick={onClose}>
+            Kết thúc bài học
+          </Button>
         </div>
       )}
     </div>
