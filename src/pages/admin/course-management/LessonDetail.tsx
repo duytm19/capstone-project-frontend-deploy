@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { courseManagementService } from "@/lib/api/services/admin";
+import { Upload, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLessonDetail() {
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: lessonResp } = useQuery({
     queryKey: ["adminLessonDetail", lessonId, searchParams.get("courseId")],
@@ -27,16 +30,23 @@ export default function AdminLessonDetail() {
     durationInSeconds: "",
     lessonOrder: "",
     materialsText: "",
+    videoUrl: "",
   });
+
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (lesson) {
+      const videoAsset = (lesson.mediaAssets || []).find((asset: any) => asset.assetType === 'VIDEO');
       setForm({
         title: lesson.title ?? "",
         description: lesson.description ?? "",
         durationInSeconds: String(lesson.durationInSeconds ?? ""),
         lessonOrder: String(lesson.lessonOrder ?? ""),
         materialsText: (lesson.materials || []).join("\n"),
+        videoUrl: videoAsset?.assetUrl ?? "",
       });
     }
   }, [lesson]);
@@ -55,6 +65,30 @@ export default function AdminLessonDetail() {
     },
   });
 
+  const uploadVideoMutation = useMutation({
+    mutationFn: (file: File) => courseManagementService.uploadLessonVideo(searchParams.get("courseId")!, lessonId!, file),
+    onSuccess: (response) => {
+      const videoUrl = response.data.url;
+      // Use functional update to avoid stale state
+      setForm((prevForm) => ({ ...prevForm, videoUrl }));
+      setSelectedVideoFile(null);
+      setUploadProgress(0);
+      // Invalidate and refetch to ensure lesson data is up to date
+      queryClient.invalidateQueries({ queryKey: ["adminLessonDetail", lessonId, searchParams.get("courseId")] });
+      toast({
+        title: "Upload thành công",
+        description: "Video đã được upload.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Upload thất bại",
+        description: error?.response?.data?.message || "Có lỗi xảy ra khi upload video",
+        variant: "destructive",
+      });
+    },
+  });
+
   const comments = lesson?.comments || [];
 
   const backHref = useMemo(() => {
@@ -69,6 +103,38 @@ export default function AdminLessonDetail() {
     const mm = m.toString().padStart(2, "0");
     const ss = s.toString().padStart(2, "0");
     return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+  };
+
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['video/mp4', 'video/mpeg', 'video/quicktime', 'video/x-msvideo', 'video/webm'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Vui lòng chọn file video hợp lệ (MP4, MPEG, MOV, AVI, WebM)');
+        return;
+      }
+      // Validate file size (max 500MB)
+      const maxSize = 500 * 1024 * 1024; // 500MB
+      if (file.size > maxSize) {
+        alert('File video quá lớn. Vui lòng chọn file nhỏ hơn 500MB');
+        return;
+      }
+      setSelectedVideoFile(file);
+    }
+  };
+
+  const handleUploadVideo = () => {
+    if (selectedVideoFile) {
+      uploadVideoMutation.mutate(selectedVideoFile);
+    }
+  };
+
+  const handleRemoveSelectedVideo = () => {
+    setSelectedVideoFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -106,6 +172,25 @@ export default function AdminLessonDetail() {
           </div>
         </div>
       )}
+
+      {(() => {
+        // Check video from form (uploaded) or from lesson data (saved)
+        const currentVideoUrl = form.videoUrl || (lesson?.mediaAssets || []).find((asset: any) => asset.assetType === 'VIDEO')?.assetUrl;
+
+        return currentVideoUrl ? (
+          <div className="rounded border p-4 space-y-2">
+            <h3 className="text-xl font-semibold">Video bài học</h3>
+            <video
+              key={currentVideoUrl} // Force re-render when URL changes
+              controls
+              className="w-full max-w-3xl rounded"
+              src={currentVideoUrl}
+            >
+              Trình duyệt của bạn không hỗ trợ video.
+            </video>
+          </div>
+        ) : null;
+      })()}
 
       <h2 className="text-2xl font-semibold">Chỉnh sửa thông tin bài học</h2>
       {lesson && (
@@ -154,11 +239,57 @@ export default function AdminLessonDetail() {
               onChange={(e) => setForm({ ...form, materialsText: e.target.value })}
             />
           </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="lsVideoFile">Video bài học</Label>
+            <div className="space-y-2">
+              <Input
+                ref={fileInputRef}
+                id="lsVideoFile"
+                type="file"
+                accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo,video/webm"
+                onChange={handleVideoFileChange}
+                className="cursor-pointer"
+              />
+              <p className="text-sm text-muted-foreground">
+                Chọn file video để upload (MP4, MPEG, MOV, AVI, WebM - tối đa 500MB)
+              </p>
+
+              {selectedVideoFile && (
+                <div className="flex items-center gap-2 p-3 bg-muted rounded">
+                  <Upload className="h-4 w-4" />
+                  <span className="text-sm flex-1">{selectedVideoFile.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {(selectedVideoFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleRemoveSelectedVideo}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleUploadVideo}
+                    disabled={uploadVideoMutation.isPending}
+                  >
+                    {uploadVideoMutation.isPending ? 'Đang upload...' : 'Upload'}
+                  </Button>
+                </div>
+              )}
+
+              {form.videoUrl && (
+                <div className="text-sm text-muted-foreground">
+                  Video hiện tại: {form.videoUrl.split('/').pop()}
+                </div>
+              )}
+            </div>
+          </div>
 
           <div className="md:col-span-2 flex gap-2">
             <Button
-              onClick={() =>
-                updateLessonMutation.mutate({
+              onClick={() => {
+                const updateData: any = {
                   title: form.title,
                   description: form.description,
                   lessonOrder: form.lessonOrder === "" ? undefined : Number(form.lessonOrder),
@@ -167,11 +298,23 @@ export default function AdminLessonDetail() {
                     .split("\n")
                     .map((s) => s.trim())
                     .filter((s) => s.length > 0),
-                })
-              }
-              disabled={!form.title}
+                };
+
+                // Add mediaAssets if video URL is provided (from upload)
+                if (form.videoUrl.trim()) {
+                  updateData.mediaAssets = [
+                    {
+                      assetType: 'VIDEO',
+                      assetUrl: form.videoUrl.trim(),
+                    }
+                  ];
+                }
+
+                updateLessonMutation.mutate(updateData);
+              }}
+              disabled={!form.title || updateLessonMutation.isPending}
             >
-              Lưu thay đổi
+              {updateLessonMutation.isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
             </Button>
           </div>
         </div>
