@@ -15,12 +15,12 @@ export type {
 } from './auth.service';
 
 export type {
-  Course,
   CourseDetail,
-  Lesson,
   GetCoursesParams,
+  SellerCoursesParams,
+  CreateCourseRequest,
+  UpdateCourseRequest,
 } from './course.service';
 
 
-export type { };
 
