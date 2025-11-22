@@ -86,7 +86,7 @@ export default function CoursesManagement() {
         <div>
           <div className="font-medium">{course.title}</div>
           <div className="text-sm text-muted-foreground">
-            Giảng viên: {(course as any).courseSeller?.fullName || 'N/A'}
+            Giảng viên: {(course as any).user?.fullName || 'N/A'}
           </div>
         </div>
       )
