@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Navbar from '@/components/user/layout/Navbar';
 import Footer from '@/components/user/layout/Footer';
 import CourseCard from '@/components/user/course/CourseCard';
-import { mockCourses } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -14,24 +13,52 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { usePurchases } from '@/context/PurchasesContext';
+import { useCourses } from '@/hooks/api';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ErrorMessage } from '@/components/ui/error-message';
+import type { CourseLevel } from '@/types/type';
 
 const Courses = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [selectedLevel, setSelectedLevel] = useState<'all' | CourseLevel>('all');
   const { items } = usePurchases();
 
-  const levels = ['all', ...Array.from(new Set(mockCourses.map(c => c.courseLevel).filter(Boolean)))] as string[];
-
-  const filteredCourses = mockCourses.filter(course => {
-    const q = searchQuery.toLowerCase();
-    const matchesSearch = course.title.toLowerCase().includes(q) || (course.description ?? '').toLowerCase().includes(q);
-    const matchesLevel = selectedLevel === 'all' || course.courseLevel === selectedLevel;
-    return matchesSearch && matchesLevel;
+  const {
+    data: coursesResponse,
+    isLoading: isLoadingCourses,
+    isError: isCoursesError,
+    error: coursesError,
+    refetch: refetchCourses,
+  } = useCourses({
+    page: 1,
+    limit: 30,
+    search: searchQuery || undefined,
+    courseLevel: selectedLevel === 'all' ? undefined : selectedLevel,
+    status: 'ACTIVE',
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
   });
 
+  const courses = coursesResponse?.data ?? [];
+
+  const levels = useMemo(
+    () =>
+      ([
+        'all',
+        ...Array.from(
+          new Set(
+            courses
+              .map((course) => course.courseLevel)
+              .filter(Boolean) as CourseLevel[]
+          )
+        ),
+      ] as Array<'all' | CourseLevel>),
+    [courses]
+  );
+
   const purchasedIds = new Set(items.map(i => i.course.id));
-  const filteredPurchasedCourses = filteredCourses.filter(c => purchasedIds.has(c.id));
-  const filteredUnpurchasedCourses = filteredCourses.filter(c => !purchasedIds.has(c.id));
+  const filteredPurchasedCourses = courses.filter(c => purchasedIds.has(c.id));
+  const filteredUnpurchasedCourses = courses.filter(c => !purchasedIds.has(c.id));
 
   return (
     <div className="min-h-screen">
@@ -71,7 +98,7 @@ const Courses = () => {
               {/* Category filter removed: not in admin mock */}
 
               {/* Level Filter */}
-              <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+              <Select value={selectedLevel} onValueChange={(value) => setSelectedLevel(value as 'all' | CourseLevel)}>
                 <SelectTrigger className="w-full lg:w-[200px] h-12">
                   <SelectValue placeholder="Trình độ" />
                 </SelectTrigger>
@@ -92,11 +119,25 @@ const Courses = () => {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-semibold">
-                {filteredCourses.length} khóa học được tìm thấy
+                {coursesResponse?.pagination.total ?? courses.length} khóa học được tìm thấy
               </h2>
             </div>
 
-            {filteredCourses.length > 0 ? (
+            {isLoadingCourses && (
+              <div className="py-10">
+                <LoadingSpinner text="Đang tải danh sách khóa học..." />
+              </div>
+            )}
+
+            {isCoursesError && (
+              <ErrorMessage
+                className="mb-8"
+                message={coursesError instanceof Error ? coursesError.message : 'Không thể tải danh sách khoá học.'}
+                onRetry={refetchCourses}
+              />
+            )}
+
+            {!isLoadingCourses && !isCoursesError && courses.length > 0 ? (
               <div className="space-y-12">
                 <div>
                   <div className="flex items-center justify-between mb-4">

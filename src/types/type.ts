@@ -37,19 +37,79 @@ export interface Wallet {
   userId: string;
 }
 
+export type CourseLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+export type MediaAssetType = 'AUDIO' | 'IMAGE' | 'VIDEO';
+
+export interface LessonMediaAsset {
+  id: string;
+  assetType: MediaAssetType;
+  assetUrl: string;
+}
+
+export interface CourseLesson {
+  id: string;
+  title: string;
+  description?: string;
+  lessonOrder?: number;
+  durationInSeconds?: number;
+  materials?: string[];
+  commentCount?: number;
+  courseId: string;
+  videoUrl?: string;
+  mediaAssets?: LessonMediaAsset[];
+}
+
+export interface CourseTestSection {
+  id: string;
+  title: string;
+  skill: 'READING' | 'LISTENING' | 'WRITING' | 'SPEAKING';
+  durationInSeconds?: number;
+  totalQuestions?: number;
+  totalScore?: number;
+  sectionOrder?: number;
+  testId: string;
+}
+
+export interface CourseTest {
+  id: string;
+  title: string;
+  durationInMinutes: number;
+  totalScore: number;
+  passingScore: number;
+  englishTestTypeId?: string;
+  maxAttempts?: number;
+  practiceCount?: number;
+  testType: 'FINAL' | 'PRACTICE' | string;
+  createdAt?: string;
+  sections?: CourseTestSection[];
+}
+
 export interface Course {
   id: string;
   title: string;
   description?: string;
   price: number; // Decimal trong DB, number trong FE
-  courseLevel?: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  category?: string;
+  courseLevel?: CourseLevel;
   courseSellerId: string;
+  finalTestId?: string | null;
   ratingCount?: number;
-  status: 'PENDING' | 'ACTIVE' | 'REFUSE' | 'INACTIVE' | 'DELETE';
+  status:
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'REFUSE'
+    | 'INACTIVE'
+    | 'DELETE'
+    | 'DRAFT'
+    | 'PUBLISHED';
   createdAt: string; // DateTime as ISO string
   updatedAt: string; // DateTime as ISO string
-  courseSeller: User;
+  courseSeller?: User;
   averageRating?: number;
+  lessons?: CourseLesson[];
+  test?: CourseTest | null;
+  ratings?: Rating[];
 }
 
 export interface Transaction {
@@ -99,8 +159,8 @@ export interface Report {
   createdAt: string; // DateTime as ISO string
   userId: string;
   courseId: string;
-  user: User;
-  course: Course;
+  user?: User;
+  course?: Course;
 }
 
 export interface SubscriptionPlan {

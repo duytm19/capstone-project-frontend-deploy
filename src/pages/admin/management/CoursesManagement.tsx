@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,23 +23,45 @@ import {
   X,
   Star
 } from 'lucide-react';
-import { mockCourses } from '@/data/mock';
 import { Course } from '@/types/type';
 import DataTable from '@/components/admin/DataTable';
 import FilterSection from '@/components/admin/FilterSection';
+import { useCourses } from '@/hooks/api';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ErrorMessage } from '@/components/ui/error-message';
 
 export default function CoursesManagement() {
-  const [courses] = useState<Course[]>(mockCourses);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
 
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.courseSeller.fullName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const {
+    data: coursesResponse,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useCourses({
+    page: 1,
+    limit: 50,
+    search: searchTerm || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter as Course['status'],
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
   });
+
+  const courses = coursesResponse?.data ?? [];
+  const totalCourses = coursesResponse?.pagination.total ?? courses.length;
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    return courses.filter(course => {
+      const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (course.courseSeller?.fullName ?? '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || course.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [courses, searchTerm, statusFilter]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -58,6 +80,12 @@ export default function CoursesManagement() {
         return <Badge variant="destructive">Từ chối</Badge>;
       case 'INACTIVE':
         return <Badge variant="outline">Không hoạt động</Badge>;
+      case 'PUBLISHED':
+        return <Badge className="bg-blue-600">Đã xuất bản</Badge>;
+      case 'DRAFT':
+        return <Badge variant="outline">Bản nháp</Badge>;
+      case 'DELETE':
+        return <Badge variant="destructive">Đã xoá</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -71,7 +99,7 @@ export default function CoursesManagement() {
         <div>
           <div className="font-medium">{course.title}</div>
           <div className="text-sm text-muted-foreground">
-            Giảng viên: {course.courseSeller.fullName}
+            Giảng viên: {course.courseSeller?.fullName ?? 'Giảng viên ẩn danh'}
           </div>
         </div>
       )
@@ -152,8 +180,32 @@ export default function CoursesManagement() {
     { value: 'ACTIVE', label: 'Hoạt động' },
     { value: 'PENDING', label: 'Chờ duyệt' },
     { value: 'REFUSE', label: 'Từ chối' },
-    { value: 'INACTIVE', label: 'Không hoạt động' }
+    { value: 'INACTIVE', label: 'Không hoạt động' },
+    { value: 'PUBLISHED', label: 'Đã xuất bản' },
+    { value: 'DRAFT', label: 'Bản nháp' },
+    { value: 'DELETE', label: 'Đã xoá' },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý khóa học</h1>
+        <LoadingSpinner text="Đang tải khoá học..." />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Quản lý khóa học</h1>
+        <ErrorMessage
+          message={error instanceof Error ? error.message : 'Không thể tải danh sách khoá học.'}
+          onRetry={refetch}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -180,7 +232,7 @@ export default function CoursesManagement() {
 
       <DataTable
         title="Danh sách khóa học"
-        description={`Tổng cộng ${courses.length} khóa học`}
+        description={`Tổng cộng ${totalCourses} khóa học`}
         data={filteredCourses}
         columns={columns}
         emptyMessage="Không tìm thấy khóa học nào"
@@ -200,7 +252,7 @@ export default function CoursesManagement() {
               <div>
                 <h3 className="text-lg font-semibold">{selectedCourse.title}</h3>
                 <p className="text-muted-foreground">
-                  Giảng viên: {selectedCourse.courseSeller.fullName}
+                  Giảng viên: {selectedCourse.courseSeller?.fullName ?? 'Giảng viên ẩn danh'}
                 </p>
               </div>
               
