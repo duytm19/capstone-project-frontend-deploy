@@ -138,6 +138,20 @@ class CourseService {
     });
     return response.data;
   }
+
+  /**
+   * Lấy courses của seller hiện tại (tự động lấy từ token)
+   */
+  async getMyCourses(
+    params?: SellerCoursesParams
+  ): Promise<ApiResponse<{ data: Course[]; count: number }>> {
+    const response = await apiClient.get<
+      ApiResponse<{ data: Course[]; count: number }>
+    >('/courses/seller/me', {
+      params,
+    });
+    return response.data;
+  }
 }
 
 export const courseService = new CourseService();

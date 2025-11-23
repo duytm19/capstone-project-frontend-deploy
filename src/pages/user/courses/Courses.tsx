@@ -119,7 +119,7 @@ const Courses = () => {
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-2xl font-semibold">
-                {coursesResponse?.pagination.total ?? courses.length} khóa học được tìm thấy
+                {coursesResponse?.pagination?.total ?? courses.length} khóa học được tìm thấy
               </h2>
             </div>
 

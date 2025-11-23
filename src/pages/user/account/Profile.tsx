@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'; // MỚI: Thêm useEffect
+import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '@/components/user/layout/Navbar';
 import Footer from '@/components/user/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -15,14 +16,14 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Edit, Save, X, Loader2 } from 'lucide-react'; // MỚI: Thêm Loader2
+import { Calendar, Edit, Save, X, Loader2, Camera, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { User } from '@/types/type';
 import CourseSellerApplicationDialog from '@/components/user/account/CourseSellerApplicationDialog';
 import type { CourseSellerApplication } from '@/types/type';
 import { formatVND, formatDate, formatDateForInput } from '@/lib/utils';
-import { useProfile } from '@/hooks/api/use-user'; // Giữ nguyên
-import { useQueryClient } from '@tanstack/react-query'; // MỚI: Thêm Query Client
+import { useProfile, useUpdateProfile } from '@/hooks/api/use-user';
+import { useQueryClient } from '@tanstack/react-query';
 
 const englishLevels = ["A1", "A2", "B1", "B2", "C1", "C2"];
 
@@ -181,7 +182,7 @@ export default function Profile() {
             Đã xảy ra lỗi
           </h2>
           <p className="text-muted-foreground mb-4">
-            {error?.message || "Không thể tải thông tin cá nhân."}
+            {error || "Không thể tải thông tin cá nhân."}
           </p>
           <Button onClick={() => window.location.reload()}>
             Tải lại trang

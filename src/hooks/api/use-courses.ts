@@ -49,8 +49,16 @@ export const useSellerCourses = (
 ) => {
   return useQuery({
     queryKey: ['seller-courses', sellerId, params],
-    queryFn: () => courseService.getCoursesBySeller(sellerId!, params),
-    enabled: !!sellerId,
+    queryFn: () => {
+      // Nếu có sellerId và không phải empty string, dùng endpoint với sellerId
+      // Nếu không, dùng endpoint /me để tự động lấy từ token
+      if (sellerId && sellerId.trim() !== '') {
+        return courseService.getCoursesBySeller(sellerId, params);
+      } else {
+        return courseService.getMyCourses(params);
+      }
+    },
+    enabled: true, // Luôn enabled, sẽ dùng /me nếu không có sellerId
     staleTime: 2 * 60 * 1000,
     select: (response) => response.data,
   });
@@ -135,5 +143,6 @@ export const usePublishCourse = () => {
     },
   });
 };
+
 
 
