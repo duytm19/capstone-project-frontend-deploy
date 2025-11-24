@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
+import { MoreHorizontal, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatVND } from '@/lib/utils';
 import { useSellerCourses } from '@/hooks/api';
@@ -157,15 +157,6 @@ export default function SellerCourses() {
                   <DropdownMenuItem onClick={() => navigate(`/seller/courses/${item.id}`)}>
                     <Eye className="mr-2 h-4 w-4" /> Xem chi tiết
                   </DropdownMenuItem>
-                  {item.status === 'ACTIVE' ? (
-                    <DropdownMenuItem onClick={() => alert('Tạm dừng (demo)')}>
-                      <ToggleLeft className="mr-2 h-4 w-4" /> Tạm dừng
-                    </DropdownMenuItem>
-                  ) : (
-                    <DropdownMenuItem onClick={() => alert('Kích hoạt (demo)')}>
-                      <ToggleRight className="mr-2 h-4 w-4" /> Kích hoạt
-                    </DropdownMenuItem>
-                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )

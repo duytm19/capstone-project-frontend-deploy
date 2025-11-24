@@ -10,5 +10,12 @@ export {
   useUpdateCourse,
   useDeleteCourse,
   usePublishCourse,
+  useLesson,
 } from './use-courses';
+export {
+  useSellerDashboard,
+  useSellerLearners,
+  useSellerComments,
+  useSellerMonthlyFees,
+} from './use-seller';
 

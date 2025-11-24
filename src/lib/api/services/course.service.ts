@@ -152,6 +152,16 @@ class CourseService {
     });
     return response.data;
   }
+
+  /**
+   * Lấy chi tiết một lesson
+   */
+  async getLessonById(courseId: string, lessonId: string): Promise<ApiResponse<any>> {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `/courses/${courseId}/lessons/${lessonId}`
+    );
+    return response.data;
+  }
 }
 
 export const courseService = new CourseService();

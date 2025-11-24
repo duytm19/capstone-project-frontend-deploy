@@ -3,6 +3,7 @@
  */
 export { authService } from './auth.service';
 export { courseService } from './course.service';
+export { sellerService } from './seller.service';
 
 // Export types
 export type {
@@ -21,6 +22,16 @@ export type {
   CreateCourseRequest,
   UpdateCourseRequest,
 } from './course.service';
+
+export type {
+  SellerDashboardStats,
+  SellerLearner,
+  SellerComment,
+  SellerMonthlyFee,
+  GetLearnersResponse,
+  GetCommentsResponse,
+  GetMonthlyFeesResponse,
+} from './seller.service';
 
 
 

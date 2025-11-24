@@ -144,5 +144,18 @@ export const usePublishCourse = () => {
   });
 };
 
+/**
+ * Hook để lấy chi tiết một lesson
+ */
+export const useLesson = (courseId: string | undefined, lessonId: string | undefined) => {
+  return useQuery({
+    queryKey: ['lesson', courseId, lessonId],
+    queryFn: () => courseService.getLessonById(courseId!, lessonId!),
+    enabled: !!courseId && !!lessonId,
+    staleTime: 5 * 60 * 1000,
+    select: (response) => response.data,
+  });
+};
+
 
 
