@@ -28,6 +28,8 @@ const Courses = () => {
     search: searchQuery || undefined,
     level: selectedLevel,
     enrollmentStatus: 'enrolled', // 👈 Lọc Server: ĐÃ MUA
+    sortBy: 'ratingCount',
+    sortOrder: 'desc',
   }); // (Có thể thêm enabled: !!user vào đây nếu cần)
 
   // === FETCH 2: KHÓA HỌC CÓ SẴN (CHƯA MUA) ===
@@ -42,6 +44,8 @@ const Courses = () => {
     search: searchQuery || undefined,
     level: selectedLevel,
     enrollmentStatus: user ? 'not_enrolled' : undefined, // 👈 Lọc Server: CHƯA MUA
+    sortBy: 'ratingCount',
+    sortOrder: 'desc',
   });
 
   // Data

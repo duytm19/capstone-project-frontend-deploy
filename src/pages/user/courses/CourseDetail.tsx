@@ -49,6 +49,26 @@ const CourseDetail = () => {
     return [...course.lessons].sort((a, b) => (a.lessonOrder ?? 0) - (b.lessonOrder ?? 0));
   }, [course]);
 
+  // Ưu tiên lấy thông tin giảng viên từ courseSeller, fallback sang user (cho các API trả về field user)
+  const instructor = useMemo(() => {
+    if (!course) return null;
+    return (course as any).courseSeller || (course as any).user || null;
+  }, [course]);
+  console.log("instructor", instructor)
+
+  // Tính điểm trung bình từ ratings nếu backend chưa set averageRating
+  const averageRating = useMemo(() => {
+    if (!course) return undefined;
+    if (course.averageRating != null) return Number(course.averageRating.toFixed(1));
+
+    const ratings = (course as any).ratings as { score: number }[] | undefined;
+    if (!ratings || ratings.length === 0) return undefined;
+
+    const sum = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
+    const avg = sum / ratings.length;
+    return Number(avg.toFixed(1));
+  }, [course]);
+
   const isPurchased = course ? has(course.id) : false;
 
   const renderNotFound = () => (
@@ -112,7 +132,10 @@ const CourseDetail = () => {
               <div className="mb-6">
                 <div className="flex flex-wrap gap-2 mb-4">
                   {course.courseLevel && (
-                    <Badge variant="outline" className="bg-primary-foreground/10 border-primary-foreground/20">
+                    <Badge
+                      variant="outline"
+                      className="bg-white text-primary border-white/40 shadow-sm px-3 py-1 rounded-full"
+                    >
                       {course.courseLevel}
                     </Badge>
                   )}
@@ -127,25 +150,29 @@ const CourseDetail = () => {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-6 mb-6">
+              <div className="flex flex-wrap gap-6 mb-6 items-center">
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-secondary fill-secondary" />
-                  <span className="font-semibold">{course.averageRating ?? 'N/A'}</span>
-                  <span className="text-primary-foreground/70">({course.ratingCount ?? 0} đánh giá)</span>
+                  <span className="font-semibold">
+                    {averageRating != null ? averageRating.toFixed(1) : 'N/A'}
+                  </span>
+                  <span className="text-primary-foreground/70">
+                    ({course.ratingCount ?? (course as any)?.ratings?.length ?? 0} đánh giá)
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                {course.courseSeller?.profilePicture && (
+                {instructor?.profilePicture && (
                   <img
-                    src={course.courseSeller?.profilePicture ?? ''}
-                    alt={course.courseSeller?.fullName ?? 'Giảng viên'}
+                    src={instructor.profilePicture ?? ''}
+                    alt={instructor.fullName ?? 'Giảng viên'}
                     className="w-12 h-12 rounded-full object-cover ring-2 ring-primary-foreground/20"
                   />
                 )}
                 <div>
                   <div className="text-sm text-primary-foreground/70">Giảng viên</div>
-                  <div className="font-semibold">{course.courseSeller?.fullName ?? 'Giảng viên ẩn danh'}</div>
+                  <div className="font-semibold">{instructor?.fullName ?? 'Giảng viên ẩn danh'}</div>
                 </div>
               </div>
             </div>
@@ -202,17 +229,40 @@ const CourseDetail = () => {
                 <TabsContent value="instructor" className="mt-6">
                   <div className="bg-card rounded-2xl p-8 border border-border">
                     <div className="flex items-start gap-6 mb-6">
-                      {course.courseSeller?.profilePicture && (
+                      {instructor?.profilePicture && (
                         <img
-                          src={course.courseSeller?.profilePicture ?? ''}
-                          alt={course.courseSeller?.fullName ?? 'Giảng viên'}
+                          src={instructor.profilePicture ?? ''}
+                          alt={instructor.fullName ?? 'Giảng viên'}
                           className="w-24 h-24 rounded-full object-cover"
                         />
                       )}
                       <div>
                         <h3 className="text-2xl font-semibold mb-2 font-['Be Vietnam Pro']">
-                          {course.courseSeller?.fullName ?? 'Giảng viên ẩn danh'}
+                          {instructor?.fullName ?? 'Giảng viên ẩn danh'}
                         </h3>
+                        <div className="mt-2 flex flex-col gap-1 text-sm text-muted-foreground">
+                          {instructor?.email && (
+                            <span>
+                              <span className="font-medium">Email:</span> {instructor.email}
+                            </span>
+                          )}
+                          {instructor?.phoneNumber && (
+                            <span>
+                              <span className="font-medium">Điện thoại:</span> {instructor.phoneNumber}
+                            </span>
+                          )}
+                          {instructor?.englishLevel && (
+                            <span>
+                              <span className="font-medium">Trình độ tiếng Anh:</span> {instructor.englishLevel}
+                            </span>
+                          )}
+                          {Array.isArray(instructor?.learningGoals) && instructor.learningGoals.length > 0 && (
+                            <span>
+                              <span className="font-medium">Mục tiêu học:</span>{' '}
+                              {instructor.learningGoals.join(', ')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
