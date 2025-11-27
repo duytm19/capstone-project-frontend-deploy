@@ -40,6 +40,7 @@ import { SellerProtectedRoute } from "./components/auth/SellerProtectedRoute";
 import Login from "./pages/shared/auth/Login";
 import NotFound from "./pages/shared/NotFound";
 import Register from "./pages/shared/auth/Register";
+import VerifyEmailPage from "./pages/shared/auth/VerifyEmail";
 
 // Layouts
 import AdminLayout from "./components/admin/AdminLayout";
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/verify" element={<VerifyEmailPage />} />
           {/* protected routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/my-courses" element={<MyCourses />} />
