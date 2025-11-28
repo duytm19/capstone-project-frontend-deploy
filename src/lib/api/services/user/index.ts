@@ -8,6 +8,7 @@ export {tagService} from './flashcard/tag.service'
 export {userService} from './profile/user.service'
 export {topupService}  from './profile/topup.service'
 export {cartService} from './cart/cart.service'
+export {studentLearningService} from './learning/student-learning.service'
 // Export types
 export type {
   LoginRequest,
@@ -24,6 +25,7 @@ export type {ReviewQuality,SubmitReviewDTO,DeckFormDTO, CardFormDTO} from './fla
 export type {UpdateProfileDTO}from './profile/user.service'
 export type {CreateTopupRequest, ConfirmPaymentRequest} from './profile/topup.service'
 export type {CheckoutResponse} from './cart/cart.service'
+export type {PaginatedParams as StudentPaginatedParams,CreateLessonCommentRequest,} from './learning/student-learning.service'
 // export type {
 //   Course,
 //   CourseDetail,
