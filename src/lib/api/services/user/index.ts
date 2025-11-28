@@ -22,7 +22,7 @@ export type {GetCoursesForUserParams} from './course/course.serivce';
 
 export type {ReviewQuality,SubmitReviewDTO,DeckFormDTO, CardFormDTO} from './flashcard/flashcard.service'
 export type {UpdateProfileDTO}from './profile/user.service'
-export type {CreateTopupRequest, ConfirmPaymentRequest} from './profile/topup.service'
+export type {CreateTopupRequest, ConfirmPaymentRequest, CreateTopupResponse} from './profile/topup.service'
 export type {CheckoutResponse} from './cart/cart.service'
 // export type {
 //   Course,
