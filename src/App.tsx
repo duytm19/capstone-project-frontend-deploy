@@ -9,6 +9,7 @@ import Index from "./pages/user/home/Home";
 import Courses from "./pages/user/courses/Courses";
 import CourseDetail from "./pages/user/courses/CourseDetail";
 import Flashcards from "./pages/user/learning/Flashcards";
+import StudentLearningPage from "./pages/user/learning/StudentLearning";
 import Profile from "./pages/user/account/Profile";
 import Wallet from "./pages/user/account/Wallet";
 import Cart from "./pages/user/account/Cart";
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/flashcards" element={<Flashcards />} />
+            <Route path="/learning/courses/:courseId/lessons/:lessonId?" element={<StudentLearningPage />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/notifications" element={<Notifications />} />
 
