@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/user/layout/Navbar';
 import Footer from '@/components/user/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,12 @@ import type { Report } from '@/types/type';
 import { useGetCourseDetail, useGetMyCourses } from '@/hooks/api/use-courses';
 import { useAddToCart, useDirectBuy } from '@/hooks/api/use-cart';
 import { useUser } from '@/hooks/api/use-user';
+import { useCourseContext } from '@/hooks/api/use-student-learning';
 
 const CourseDetail = () => {
   const { id } = useParams();
   const { user } = useUser();
+  const navigate = useNavigate();
 
   // 1. Fetch Data
   const { data: course, isLoading, isError } = useGetCourseDetail(id!);
@@ -26,7 +28,7 @@ const CourseDetail = () => {
   const { data: myCoursesData } = useGetMyCourses();
   
   // ✅ SỬA LỖI TẠI ĐÂY: Truy cập vào thuộc tính .data của object phân trang
-  const myCourses = myCoursesData?.data || []; 
+  const myCourses = myCoursesData?.data || [];
 
   // 2. Mutations (Khai báo trước khi return)
   const addToCartMutation = useAddToCart();
@@ -46,6 +48,11 @@ const CourseDetail = () => {
     // Bây giờ myCourses chắc chắn là mảng, hàm .some sẽ hoạt động
     return myCourses.some(c => c.id === course.id);
   }, [course, myCourses, user]);
+
+  // Fetch course context for learning navigation (only if purchased)
+  const { data: courseContext } = useCourseContext(
+    isPurchased ? id : undefined
+  );
 
   // Lấy thông tin giảng viên
   const instructor = useMemo(() => {
@@ -106,6 +113,56 @@ const CourseDetail = () => {
         }
       });
     }
+  };
+
+  // Function to find the nearest/current lesson to continue
+  const getNextLessonId = (): string | null => {
+    if (!courseContext?.syllabus || courseContext.syllabus.length === 0) {
+      return null;
+    }
+
+    const syllabus = courseContext.syllabus;
+    
+    // Sort by lessonOrder to ensure proper order
+    const sortedSyllabus = [...syllabus].sort((a, b) => {
+      const orderA = a.lessonOrder ?? 999;
+      const orderB = b.lessonOrder ?? 999;
+      return orderA - orderB;
+    });
+
+    // Find first incomplete lesson (next lesson to continue)
+    const firstIncomplete = sortedSyllabus.find(
+      (lesson) => !lesson.isCompleted
+    );
+
+    if (firstIncomplete) {
+      return firstIncomplete.id;
+    }
+
+    // If all lessons are completed, return the last lesson
+    if (sortedSyllabus.length > 0) {
+      return sortedSyllabus[sortedSyllabus.length - 1].id;
+    }
+
+    // Fallback to first lesson
+    return sortedSyllabus[0]?.id || null;
+  };
+
+  const handleStartLearning = () => {
+    if (!id) return;
+
+    // If we have course context, navigate to the appropriate lesson
+    if (courseContext) {
+      const nextLessonId = getNextLessonId();
+      if (nextLessonId) {
+        navigate(`/learning/courses/${id}/lessons/${nextLessonId}`);
+        return;
+      }
+    }
+
+    // Fallback: navigate to learning page without lessonId
+    // The StudentLearning page will default to first lesson
+    navigate(`/learning/courses/${id}`);
   };
 
   // 6. Render Loading / Error
@@ -415,7 +472,7 @@ const CourseDetail = () => {
                         <Button
                           size="lg"
                           className="w-full bg-primary shadow-md text-lg"
-                          onClick={() => setTab('content')}
+                          onClick={handleStartLearning}
                         >
                           Vào học ngay
                         </Button>
