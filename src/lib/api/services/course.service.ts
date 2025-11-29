@@ -162,6 +162,25 @@ class CourseService {
     );
     return response.data;
   }
+
+  /**
+   * Tạo lesson mới (Seller/Admin)
+   */
+  async createLesson(
+    courseId: string,
+    data: FormData
+  ): Promise<ApiResponse<any>> {
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/courses/${courseId}/lessons`,
+      data,
+      {
+        // Don't set Content-Type header - axios will set it automatically with boundary for FormData
+        // Increased timeout to 5 minutes (300000ms) for large video file uploads
+        timeout: 300000,
+      }
+    );
+    return response.data;
+  }
 }
 
 export const courseService = new CourseService();

@@ -198,5 +198,76 @@ export const useLesson = (courseId: string | undefined, lessonId: string | undef
   });
 };
 
+/**
+ * Hook để tạo lesson mới
+ */
+export const useCreateLesson = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ courseId, formData }: { courseId: string; formData: FormData }) =>
+      courseService.createLesson(courseId, formData),
+    onSuccess: (response, variables) => {
+      // Invalidate course data to refresh lesson list
+      queryClient.invalidateQueries({ queryKey: ['course', variables.courseId] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['seller-courses'] });
+      toast.success('Tạo bài học thành công!');
+    },
+    onError: (error: any) => {
+      console.error('Create lesson error:', error);
+      
+      // Handle timeout errors specifically
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        toast.error('Thời gian tải lên quá lâu', {
+          description: 'File video quá lớn hoặc kết nối chậm. Vui lòng thử lại với file nhỏ hơn hoặc kiểm tra kết nối mạng.',
+        });
+        return;
+      }
+
+      // Handle 401 Unauthorized
+      if (error.response?.status === 401) {
+        toast.error('Phiên đăng nhập đã hết hạn', {
+          description: 'Vui lòng đăng nhập lại để tiếp tục.',
+        });
+        return;
+      }
+
+      // Handle 503 Service Unavailable (S3 connection errors)
+      if (error.response?.status === 503) {
+        const errorMessage = error.response?.data?.message || 'Dịch vụ lưu trữ file hiện không khả dụng.';
+        toast.error('Lỗi dịch vụ lưu trữ', {
+          description: errorMessage,
+        });
+        return;
+      }
+
+      // Handle 400 Bad Request with specific error message
+      if (error.response?.status === 400) {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.';
+        
+        // Check for S3 connection errors in 400 response (should be 503, but handle both)
+        if (errorMessage.includes('getaddrinfo') || errorMessage.includes('EAI_AGAIN') || errorMessage.includes('S3')) {
+          toast.error('Lỗi kết nối dịch vụ lưu trữ', {
+            description: 'Không thể kết nối đến dịch vụ lưu trữ file. Vui lòng thử lại sau hoặc liên hệ quản trị viên.',
+          });
+          return;
+        }
+        
+        toast.error('Tạo bài học thất bại', {
+          description: errorMessage,
+        });
+        return;
+      }
+
+      // Handle other errors
+      const errorMessage = error.response?.data?.message || error.message || 'Không thể tạo bài học. Vui lòng thử lại.';
+      toast.error('Tạo bài học thất bại', {
+        description: errorMessage,
+      });
+    },
+  });
+};
+
 
 

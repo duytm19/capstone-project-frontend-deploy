@@ -12,6 +12,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { formatVND } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useCourse, useLesson, useUpdateCourse } from '@/hooks/api';
+import CreateLessonDialog from '@/components/seller/CreateLessonDialog';
+import { Plus } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
 import type { CourseStatus, CourseLevel } from '@/types/type';
@@ -69,6 +71,7 @@ export default function SellerCourseDetail() {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [lessonUpdate, setLessonUpdate] = useState<Partial<{ title: string; description?: string; durationInSeconds?: number; materials: string[]; videoUrl?: string; lessonOrder?: number }>>({});
   const [refresh, setRefresh] = useState(0);
+  const [isCreateLessonDialogOpen, setIsCreateLessonDialogOpen] = useState(false);
 
   // Fetch lesson details with comments when a lesson is selected
   const { data: lessonDetail } = useLesson(id, selectedLessonId || undefined);
@@ -249,7 +252,13 @@ export default function SellerCourseDetail() {
         <TabsContent value="lessons" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Danh sách bài học ({lessons.length})</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>Danh sách bài học ({lessons.length})</CardTitle>
+                <Button onClick={() => setIsCreateLessonDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Tạo bài học mới
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -401,6 +410,16 @@ export default function SellerCourseDetail() {
               )}
             </DialogContent>
           </Dialog>
+
+          <CreateLessonDialog
+            open={isCreateLessonDialogOpen}
+            onOpenChange={setIsCreateLessonDialogOpen}
+            courseId={id!}
+            existingLessons={lessons}
+            onSuccess={() => {
+              refetch();
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="ratings" className="space-y-4">

@@ -5,13 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Eye } from 'lucide-react';
+import { MoreHorizontal, Eye, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatVND } from '@/lib/utils';
 import { useSellerCourses } from '@/hooks/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { useProfile } from '@/hooks/api/use-user';
+import CreateCourseDialog from '@/components/seller/CreateCourseDialog';
 import type { Course } from '@/types/type';
 
 export default function SellerCourses() {
@@ -21,6 +22,7 @@ export default function SellerCourses() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('ALL');
   const [level, setLevel] = useState<string>('ALL');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const {
     data: sellerCoursesResponse,
@@ -101,7 +103,13 @@ export default function SellerCourses() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Quản lý khoá học của tôi</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Quản lý khoá học của tôi</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Tạo khóa học mới
+        </Button>
+      </div>
 
       <FilterSection
         searchValue={search}
@@ -163,6 +171,14 @@ export default function SellerCourses() {
           }
         ]}
         emptyMessage="Bạn chưa có khoá học nào."
+      />
+
+      <CreateCourseDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        onSuccess={() => {
+          refetchCourses();
+        }}
       />
     </div>
   );

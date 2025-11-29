@@ -11,6 +11,7 @@ export {
   useDeleteCourse,
   usePublishCourse,
   useLesson,
+  useCreateLesson,
 } from './use-courses';
 export {
   useSellerDashboard,
