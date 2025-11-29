@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateCourse } from '@/hooks/api';
 import { CourseLevel } from '@/types/type';
@@ -41,10 +41,13 @@ export default function CreateCourseDialog({ open, onOpenChange, onSuccess }: Pr
     price: '',
     category: '',
     courseLevel: undefined as CourseLevel | undefined,
+    thumbnailFile: null as File | null,
+    thumbnailPreview: null as string | null,
   });
 
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Validate form
   const validate = (): boolean => {
@@ -86,6 +89,53 @@ export default function CreateCourseDialog({ open, onOpenChange, onSuccess }: Pr
     }
   };
 
+  // Handle thumbnail file change
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Chỉ chấp nhận file ảnh (JPEG, PNG, WEBP, GIF)');
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File ảnh không được vượt quá 5MB');
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        thumbnailFile: file,
+        thumbnailPreview: reader.result as string,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Remove thumbnail
+  const removeThumbnail = () => {
+    setFormData((prev) => ({
+      ...prev,
+      thumbnailFile: null,
+      thumbnailPreview: null,
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Trigger file input
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,31 +144,71 @@ export default function CreateCourseDialog({ open, onOpenChange, onSuccess }: Pr
       return;
     }
 
-    // Prepare payload
-    const payload = {
-      title: formData.title.trim(),
-      price: parseFloat(formData.price),
-      ...(formData.description.trim() && { description: formData.description.trim() }),
-      ...(formData.category.trim() && { category: formData.category.trim() }),
-      ...(formData.courseLevel && { courseLevel: formData.courseLevel as CourseLevel }),
-    };
+    // If there's a thumbnail file, use FormData; otherwise use JSON
+    if (formData.thumbnailFile) {
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title.trim());
+      formDataToSend.append('price', formData.price);
+      if (formData.description.trim()) {
+        formDataToSend.append('description', formData.description.trim());
+      }
+      if (formData.category.trim()) {
+        formDataToSend.append('category', formData.category.trim());
+      }
+      if (formData.courseLevel) {
+        formDataToSend.append('courseLevel', formData.courseLevel);
+      }
+      formDataToSend.append('image', formData.thumbnailFile);
 
-    // Submit
-    createCourseMutation.mutate(payload, {
-      onSuccess: () => {
-        // Reset form
-        setFormData({
-          title: '',
-          description: '',
-          price: '',
-          category: '',
-          courseLevel: undefined,
-        });
-        setErrors({});
-        onOpenChange(false);
-        onSuccess?.();
-      },
-    });
+      // Submit with FormData
+      createCourseMutation.mutate(formDataToSend, {
+        onSuccess: () => {
+          // Reset form
+          setFormData({
+            title: '',
+            description: '',
+            price: '',
+            category: '',
+            courseLevel: undefined,
+            thumbnailFile: null,
+            thumbnailPreview: null,
+          });
+          setErrors({});
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+          onOpenChange(false);
+          onSuccess?.();
+        },
+      });
+    } else {
+      // Submit with JSON (backward compatible)
+      const payload = {
+        title: formData.title.trim(),
+        price: parseFloat(formData.price),
+        ...(formData.description.trim() && { description: formData.description.trim() }),
+        ...(formData.category.trim() && { category: formData.category.trim() }),
+        ...(formData.courseLevel && { courseLevel: formData.courseLevel as CourseLevel }),
+      };
+
+      createCourseMutation.mutate(payload, {
+        onSuccess: () => {
+          // Reset form
+          setFormData({
+            title: '',
+            description: '',
+            price: '',
+            category: '',
+            courseLevel: undefined,
+            thumbnailFile: null,
+            thumbnailPreview: null,
+          });
+          setErrors({});
+          onOpenChange(false);
+          onSuccess?.();
+        },
+      });
+    }
   };
 
   // Reset form when dialog closes
@@ -131,8 +221,13 @@ export default function CreateCourseDialog({ open, onOpenChange, onSuccess }: Pr
         price: '',
         category: '',
         courseLevel: undefined,
+        thumbnailFile: null,
+        thumbnailPreview: null,
       });
       setErrors({});
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
     onOpenChange(newOpen);
   };
@@ -248,6 +343,58 @@ export default function CreateCourseDialog({ open, onOpenChange, onSuccess }: Pr
             {errors.courseLevel && (
               <p className="text-sm text-destructive">{errors.courseLevel}</p>
             )}
+          </div>
+
+          {/* Thumbnail Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="thumbnail">Thumbnail khóa học</Label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              onChange={handleFileChange}
+              className="hidden"
+              id="thumbnail"
+              disabled={createCourseMutation.isPending}
+            />
+            {formData.thumbnailPreview ? (
+              <div className="relative w-full">
+                <div className="relative aspect-video w-full overflow-hidden rounded-lg border border-border">
+                  <img
+                    src={formData.thumbnailPreview}
+                    alt="Thumbnail preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute right-2 top-2 h-8 w-8"
+                    onClick={removeThumbnail}
+                    disabled={createCourseMutation.isPending}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formData.thumbnailFile?.name} ({(formData.thumbnailFile?.size || 0) / 1024 / 1024} MB)
+                </p>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={triggerFileUpload}
+                disabled={createCourseMutation.isPending}
+                className="w-full"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Chọn ảnh thumbnail (Tối đa 5MB)
+              </Button>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Hỗ trợ: JPEG, PNG, WEBP, GIF
+            </p>
           </div>
 
           {/* Submit buttons */}

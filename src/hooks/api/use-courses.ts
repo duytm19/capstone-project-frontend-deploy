@@ -107,12 +107,13 @@ export const useSellerCourses = (
 
 /**
  * Hook để tạo course mới
+ * Supports both JSON and FormData (when uploading thumbnail)
  */
 export const useCreateCourse = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateCourseRequest) => courseService.createCourse(data),
+    mutationFn: (data: CreateCourseRequest | FormData) => courseService.createCourse(data),
     onSuccess: () => {
       // Invalidate và refetch danh sách courses
       queryClient.invalidateQueries({ queryKey: ['courses'] });

@@ -79,10 +79,12 @@ class CourseService {
 
   /**
    * Tạo course mới (Admin/Instructor)
+   * Supports both JSON (when no file) and FormData (when uploading thumbnail)
    */
   async createCourse(
-    data: CreateCourseRequest
+    data: CreateCourseRequest | FormData
   ): Promise<ApiResponse<Course>> {
+    // Axios interceptor will automatically handle FormData Content-Type with boundary
     const response = await apiClient.post<ApiResponse<Course>>(
       '/courses',
       data
@@ -92,11 +94,13 @@ class CourseService {
 
   /**
    * Cập nhật course (Admin/Instructor)
+   * Supports both JSON (when no file) and FormData (when uploading thumbnail)
    */
   async updateCourse(
     id: string,
-    data: UpdateCourseRequest
+    data: UpdateCourseRequest | FormData
   ): Promise<ApiResponse<Course>> {
+    // Axios interceptor will automatically handle FormData Content-Type with boundary
     const response = await apiClient.put<ApiResponse<Course>>(
       `/courses/${id}`,
       data
