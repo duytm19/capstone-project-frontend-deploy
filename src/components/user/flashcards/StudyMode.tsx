@@ -35,13 +35,14 @@ export default function StudyMode({ deckId, onClose }: StudyModeProps) {
   const [idx, setIdx] = useState(0);
   const [showBack, setShowBack] = useState(false);
 
-  useEffect(() => {
-    if (queueData) {
-      setSessionQueue(queueData);
-      setIdx(0);
-      setShowBack(false);
-    }
-  }, [queueData]);
+useEffect(() => {
+ 
+  if (queueData && sessionQueue.length === 0) {
+    setSessionQueue(queueData);
+    setIdx(0);
+    setShowBack(false);
+  }
+}, [queueData, sessionQueue.length]); 
 
   const currentCard = sessionQueue[idx];
 
@@ -72,7 +73,9 @@ export default function StudyMode({ deckId, onClose }: StudyModeProps) {
 
     // Quan trọng: Đợi 300ms để hiệu ứng lật về (nếu muốn) hoặc reset ngay
     setShowBack(false);
-    setIdx((i) => i + 1);
+    setTimeout(() => {
+      setIdx((i) => i + 1);
+    }, 200);
   };
 
   const renderStatusBadge = (type?: string) => {
