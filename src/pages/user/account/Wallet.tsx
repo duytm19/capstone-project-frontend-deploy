@@ -24,9 +24,9 @@ type PaymentMethod = "MOMO" | "ZALOPAY" | "BANKING" | "APPLEPAY";
 
 const paymentMethods: { value: PaymentMethod; label: string }[] = [
   { value: "MOMO", label: "MOMO" },
-  { value: "ZALOPAY", label: "ZaloPay" },
-  { value: "BANKING", label: "Chuyển khoản ngân hàng" },
-  { value: "APPLEPAY", label: "Apple Pay" },
+  // { value: "ZALOPAY", label: "ZaloPay" },
+  // { value: "BANKING", label: "Chuyển khoản ngân hàng" },
+  // { value: "APPLEPAY", label: "Apple Pay" },
 ];
 
 export default function WalletPage() {
