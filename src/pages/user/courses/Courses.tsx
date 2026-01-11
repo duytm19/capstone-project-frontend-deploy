@@ -4,7 +4,7 @@ import Footer from '@/components/user/layout/Footer';
 import CourseCard from '@/components/user/course/CourseCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Loader2, ChevronLeft, ChevronRight, XCircle } from 'lucide-react'; // Thêm icon XCircle để reset
+import { Search, Loader2, ChevronLeft, ChevronRight, XCircle, Filter } from 'lucide-react'; // Thêm icon Filter
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Hooks
@@ -17,13 +17,19 @@ const Courses = () => {
   // === 1. STATE QUẢN LÝ FILTER ===
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState('all');
-  const [priceRange, setPriceRange] = useState({ min: '', max: '' }); // State cho giá
+
+  // ⭐️ TÁCH STATE GIÁ:
+  // 1. priceInput: Lưu giá trị người dùng đang gõ (UI only)
+  const [priceInput, setPriceInput] = useState({ min: '', max: '' });
+  // 2. priceRange: Lưu giá trị thực sự dùng để gọi API (Param only)
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+
   const [page, setPage] = useState(1);
   const limit = 9;
 
   const { user } = useUser();
 
-  // === FETCH 1: KHÓA HỌC CỦA TÔI (Không cần lọc giá, vì đã mua rồi) ===
+  // === FETCH 1: KHÓA HỌC CỦA TÔI ===
   const { data: myCoursesRes, isLoading: isLoadingMy } = useGetCourses({
     page: 1,
     limit: 100,
@@ -34,7 +40,7 @@ const Courses = () => {
     sortOrder: 'desc',
   });
 
-  // === FETCH 2: KHÓA HỌC CÓ SẴN (ÁP DỤNG LỌC GIÁ) ===
+  // === FETCH 2: KHÓA HỌC CÓ SẴN ===
   const {
     data: availableRes,
     isLoading: isLoadingAvailable,
@@ -44,8 +50,7 @@ const Courses = () => {
     limit: limit,
     search: searchQuery || undefined,
     level: selectedLevel,
-    // 👇 Truyền minPrice và maxPrice xuống API
-    // Convert sang number nếu có value, nếu rỗng thì gửi undefined để API bỏ qua
+    // 👇 Ở đây dùng priceRange (đã được ấn nút Apply) chứ không dùng priceInput
     minPrice: priceRange.min ? Number(priceRange.min) : undefined,
     maxPrice: priceRange.max ? Number(priceRange.max) : undefined,
     enrollmentStatus: user ? 'not_enrolled' : undefined,
@@ -53,12 +58,10 @@ const Courses = () => {
     sortOrder: 'desc',
   });
 
-  // Data
   const myCourses = user ? myCoursesRes?.data || [] : [];
   const availableCourses = availableRes?.data || [];
   const pagination = availableRes?.pagination;
 
-  // Loading
   const isLoading = (!!user && isLoadingMy) || isLoadingAvailable;
 
   // === HANDLERS ===
@@ -72,39 +75,44 @@ const Courses = () => {
     setPage(1);
   };
 
-  const handlePriceChange = (field: 'min' | 'max', value: string) => {
-    // Chỉ cho phép nhập số
+  // 1. Chỉ cập nhật state hiển thị khi gõ
+  const handlePriceInputChange = (field: 'min' | 'max', value: string) => {
     if (!/^\d*$/.test(value)) return;
-    setPriceRange(prev => ({ ...prev, [field]: value }));
-    setPage(1);
+    setPriceInput(prev => ({ ...prev, [field]: value }));
   };
-  
-  // Hàm reset bộ lọc tiện lợi cho UX
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedLevel('all');
-    setPriceRange({ min: '', max: '' });
+
+  // 2. Hàm mới: Khi ấn nút thì mới cập nhật state gọi API
+  const handleApplyPriceFilter = () => {
+    setPriceRange(priceInput); // Copy từ input sang range thật
     setPage(1);
   };
 
-  // Kiểm tra xem có đang filter không để hiện nút Reset
-  const isFiltering = searchQuery || selectedLevel !== 'all' || priceRange.min || priceRange.max;
+  // Hàm reset: Xóa sạch cả 2 state giá
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedLevel('all');
+    setPriceInput({ min: '', max: '' }); // Reset ô nhập
+    setPriceRange({ min: '', max: '' }); // Reset API params
+    setPage(1);
+  };
+
+  // Kiểm tra điều kiện hiển thị nút Reset (dùng priceRange để check logic filter, dùng priceInput để check UX)
+  const isFiltering = searchQuery || selectedLevel !== 'all' || priceRange.min || priceRange.max || priceInput.min || priceInput.max;
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
       <main className="pt-20 flex-grow">
-        {/* Hero & Filter Section */}
         <section className="bg-gradient-hero text-primary-foreground py-12">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-4xl font-bold mb-8 font-['Be Vietnam Pro']">Khám phá khóa học</h1>
             
-            {/* 👇 FILTER BAR CẢI TIẾN */}
             <div className="max-w-5xl mx-auto bg-background/10 p-5 rounded-xl backdrop-blur-md border border-white/20">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4">
+              {/* Grid Layout được điều chỉnh lại để chứa nút Apply */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
                 
-                {/* 1. Search (Chiếm 4 cột) */}
+                {/* 1. Search (4 cột) */}
                 <div className="lg:col-span-4 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70" />
                   <Input
@@ -115,7 +123,7 @@ const Courses = () => {
                   />
                 </div>
 
-                {/* 2. Level (Chiếm 3 cột) */}
+                {/* 2. Level (3 cột) */}
                 <div className="lg:col-span-3">
                   <Select value={selectedLevel} onValueChange={handleLevel}>
                     <SelectTrigger className="w-full bg-white/10 border-white/20 text-white h-10">
@@ -131,52 +139,62 @@ const Courses = () => {
                   </Select>
                 </div>
 
-                {/* 3. Price Filter (Chiếm 5 cột - chia đôi cho Min/Max) */}
-                <div className="lg:col-span-5 flex gap-2">
+                {/* 3. Price Filter (5 cột) - Bao gồm 2 input + Nút Apply */}
+                <div className="lg:col-span-5 flex gap-2 items-center">
                   <Input
                     type="text"
                     inputMode="numeric"
-                    placeholder="Giá thấp nhất"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 h-10"
-                    value={priceRange.min}
-                    onChange={(e) => handlePriceChange('min', e.target.value)}
+                    placeholder="Min"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 h-10 w-full"
+                    // 👇 Binding vào priceInput
+                    value={priceInput.min} 
+                    onChange={(e) => handlePriceInputChange('min', e.target.value)}
                   />
-                  <span className="text-white/50 self-center">-</span>
+                  <span className="text-white/50">-</span>
                   <Input
                     type="text"
                     inputMode="numeric"
-                    placeholder="Giá cao nhất"
-                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 h-10"
-                    value={priceRange.max}
-                    onChange={(e) => handlePriceChange('max', e.target.value)}
+                    placeholder="Max"
+                    className="bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:bg-white/20 h-10 w-full"
+                    // 👇 Binding vào priceInput
+                    value={priceInput.max}
+                    onChange={(e) => handlePriceInputChange('max', e.target.value)}
                   />
+                  
+                  {/* 👇 NÚT BUTTON MỚI ĐỂ GỬI PARAMS */}
+                  <Button 
+                    onClick={handleApplyPriceFilter}
+                    className="h-10 px-3 bg-white/20 hover:bg-white/30 border border-white/10 text-white"
+                    title="Áp dụng giá"
+                  >
+                    <Filter className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
 
-              {/* Nút Reset Filter nếu đang lọc */}
               {isFiltering && (
                 <div className="mt-4 flex justify-end">
-                   <Button 
+                    <Button 
                     variant="ghost" 
                     size="sm" 
                     onClick={clearFilters}
                     className="text-white/80 hover:text-white hover:bg-white/10 h-8 px-2"
-                   >
-                     <XCircle className="w-4 h-4 mr-2" /> Xóa bộ lọc
-                   </Button>
+                    >
+                      <XCircle className="w-4 h-4 mr-2" /> Xóa bộ lọc
+                    </Button>
                 </div>
               )}
             </div>
           </div>
         </section>
 
-        {/* Content Section (Giữ nguyên logic hiển thị) */}
-        <section className="py-12 container mx-auto px-4 space-y-16">
+        {/* ... (Phần Content bên dưới giữ nguyên) ... */}
+         <section className="py-12 container mx-auto px-4 space-y-16">
           {isLoading ? (
             <div className="flex justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>
           ) : (
             <>
-              {/* --- PHẦN 1: KHÓA HỌC CỦA BẠN (GIỮ NGUYÊN) --- */}
+              {/* Phần 1: My Courses */}
               {user && myCourses.length > 0 && (
                 <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="flex items-center gap-3 mb-6">
@@ -192,7 +210,7 @@ const Courses = () => {
                 </div>
               )}
 
-              {/* --- PHẦN 2: KHÓA HỌC CÓ SẴN --- */}
+              {/* Phần 2: Available Courses */}
               <div>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-primary">
@@ -211,7 +229,6 @@ const Courses = () => {
                       ))}
                     </div>
 
-                    {/* Pagination Controls */}
                     {pagination && pagination.totalPages > 1 && (
                       <div className="flex justify-center items-center gap-4">
                         <Button
